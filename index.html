@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <meta name="description" content="עוגיות של לב - עוגיות אהבה, מאפה אחד בכל פעם" />
+  <meta name="theme-color" content="#E8B4A8" />
+  <title>made.by.bareket</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Noto+Sans+Hebrew:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              pink: '#E8B4A8',
+              darkPink: '#D89B8E',
+              hoverPink: '#C88A7E',
+              bgLight: '#FFFBF7',
+              bgMedium: '#FFF8F3',
+              bgDark: '#F5E6D3',
+              brown: '#3D2817',
+              lightBrown: '#6B4423',
+              border: '#E8D4C8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans Hebrew', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Alef', sans-serif;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-[#FFFBF7] via-[#FFF8F3] to-[#F5E6D3] text-brand-brown">
+  <!-- Social Floating Buttons -->
+  <div class="fixed top-6 left-6 z-40 flex gap-3">
+    <a href="https://www.instagram.com/made.by.bareket?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+      target="_blank" rel="noopener noreferrer"
+      class="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white p-3 rounded-full shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 group"
+      title="לעמוד האינסטגרם שלנו">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+      </svg>
+    </a>
+    <a href="https://www.tiktok.com/@made.by.bareket?_r=1&_t=ZS-980TDGsac1h"
+      target="_blank" rel="noopener noreferrer"
+      class="bg-black hover:bg-neutral-800 text-white p-3 rounded-full shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 group flex items-center justify-center"
+      title="לעמוד הטיקטוק שלנו">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+      </svg>
+    </a>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden pt-8 pb-8 px-4">
+    <div class="absolute inset-0 opacity-10 pointer-events-none">
+      <div class="absolute top-10 right-20 w-40 h-40 bg-[#E8B4A8] rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-10 w-60 h-60 bg-[#F5E6D3] rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative max-w-4xl mx-auto text-center">
+      <div class="mb-4 flex justify-center animate-bounce" style="animation-duration: 3s;">
+        <img src="logo.png" alt="made.by.bareket logo"
+          class="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-lg border-4 border-white" />
+      </div>
+      <h1 class="text-5xl md:text-6xl font-bold text-brand-brown mb-4">
+        made.by.bareket
+      </h1>
+      <div
+        class="inline-block bg-[#E8B4A8]/20 text-[#6B4423] font-bold px-4 py-2 rounded-full mb-6 text-sm md:text-base border border-[#E8B4A8]">
+        🕒 מזמינים ראשון עד רביעי ומקבלים בסופש
+      </div>
+      <div class="h-1 w-24 bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] mx-auto rounded-full"></div>
+    </div>
+  </section>
+
+  <!-- Cookie Selection Section -->
+  <section class="py-6 px-4 pb-32">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-4xl font-bold text-brand-brown text-center mb-4">
+        בחר את העוגיות שלך
+      </h2>
+      <p class="text-center text-brand-lightBrown mb-12 text-lg">
+        תוכל לבחור כל כמות שתרצה מכל סוג
+      </p>
+
+      <!-- Cookies Grid -->
+      <div id="cookies-grid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
+        <!-- Dynamically populated via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Cart Bar -->
+  <div id="cart-bar"
+    class="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-[#E8B4A8] shadow-2xl p-4 z-50 hidden">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex-1 w-full md:w-auto">
+          <p id="cart-summary-text" class="text-center md:text-right font-semibold text-brand-brown mb-3 md:mb-0">
+            נבחרו 0 עוגיות להזמנה
+          </p>
+          <div id="cart-items-list"
+            class="flex flex-wrap gap-2 justify-center md:justify-start max-h-24 overflow-y-auto">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <div id="order-button-container" class="w-full md:w-auto">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Name Input Modal -->
+  <div id="name-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100] hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-[#E8D4C8] relative">
+      <h3 class="text-2xl font-bold text-brand-brown mb-2 text-center">
+        איזה כיף! כמעט סיימנו
+      </h3>
+      <p class="text-center text-brand-lightBrown mb-6">
+        איך קוראים לך? שנרשום את ההזמנה על שמך 😊
+      </p>
+      <input id="client-name-input" type="text" placeholder="הכנס שם מלא..."
+        class="w-full rounded-2xl border-2 border-[#E8D4C8] focus:border-[#E8B4A8] focus:outline-none p-3 text-right text-lg mb-6 text-brand-brown"
+        dir="rtl" oninput="validateModalSubmit()" />
+      <div class="flex gap-3">
+        <button onclick="closeNameModal()"
+          class="flex-1 border-2 border-[#E8B4A8] text-[#E8B4A8] hover:bg-[#F5E6D3] rounded-2xl py-3 text-lg font-semibold transition-colors">
+          ביטול
+        </button>
+        <button id="modal-submit-btn" disabled onclick="confirmOrder()"
+          class="flex-1 bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-white font-bold py-3 rounded-2xl text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          המשך לוואטסאפ ←
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script for Application Logic -->
+  <script>
+    const COOKIES = [
+      { id: '1', name: 'קורנפלקס', price: 15, image: 'cookies/cornflakes.jpg' },
+      { id: '2', name: 'כריות קליק', price: 16, image: 'cookies/kinder.jpeg' },
+      { id: '3', name: 'הרשיז', price: 16, image: 'cookies/oreo.jpg' },
+      { id: '4', name: 'בוואנו', price: 15, image: 'cookies/b1.jpeg' },
+      { id: '5', name: 'אמסטרדם', price: 15, image: 'cookies/amsterdam.jpeg' },
+      { id: '6', name: 'בייגלה מלוח', price: 16, image: 'cookies/solt_bigel.jpeg' },
+      { id: '7', name: 'לוטוס', price: 15, image: 'cookies/lotos.jpeg' },
+      { id: '8', name: 'נוטלה', price: 13, image: 'cookies/nutela.jpeg' },
+      { id: '9', name: 'במבה אדומה', price: 16, image: 'cookies/red_bamba.jpeg' },
+      { id: '10', name: 'שוקולד חלב', price: 13, image: 'cookies/milk_choclat.jpeg' },
+      { id: '11', name: 'טריקולד', price: 16, image: 'cookies/trikold.jpeg' },
+      { id: '12', name: 'ספרינקלס', price: 14, image: 'cookies/sprinkels.jpeg' },
+      { id: '13', name: "M&M's", price: 17, image: 'cookies/m&m.jpeg' },
+      { id: '14', name: 'חצי חצי', price: 16, image: 'cookies/half_half.jpeg' },
+      { id: '15', name: 'קינדר', price: 16, image: 'cookies/kinder.jpg' },
+    ];
+
+    let selectedCookies = [];
+    let clientName = '';
+
+    function renderCookies() {
+      const grid = document.getElementById('cookies-grid');
+      grid.innerHTML = '';
+
+      COOKIES.forEach(cookie => {
+        const count = selectedCookies.filter(c => c.id === cookie.id).length;
+
+        const card = document.createElement('div');
+        card.className = "bg-white border-2 border-[#E8D4C8] hover:border-[#E8B4A8] hover:shadow-lg rounded-2xl p-3 md:p-6 transition-all cursor-pointer flex flex-col justify-between h-full group";
+        card.onclick = () => addCookie(cookie);
+
+        card.innerHTML = `
+            <div>
+              <div class="flex justify-center mb-2 md:mb-4">
+                <img src="${cookie.image}" alt="${cookie.name}" class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full object-cover shadow-md border-2 border-[#E8D4C8] group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <h3 class="text-center font-semibold text-brand-brown mb-1 md:mb-2 text-sm md:text-lg">
+                ${cookie.name}
+              </h3>
+              <div class="mb-4"></div>
+            </div>
+            <div class="w-full" onclick="event.stopPropagation();">
+              ${count > 0 ? `
+                <div class="flex items-center justify-between bg-[#F5E6D3] rounded-xl p-1 w-full border border-[#E8D4C8]">
+                  <button onclick="removeOneCookie('${cookie.id}')" class="h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-[#E8B4A8] hover:text-[#D89B8E] hover:bg-white rounded-lg font-bold text-sm sm:text-lg transition-colors">
+                    -
+                  </button>
+                  <span class="font-bold text-brand-brown text-sm sm:text-lg">${count}</span>
+                  <button onclick='addCookie(${JSON.stringify(cookie)})' class="h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-[#E8B4A8] hover:text-[#D89B8E] hover:bg-white rounded-lg font-bold text-sm sm:text-lg transition-colors">
+                    +
+                  </button>
+                </div>
+              ` : `
+                <button onclick='addCookie(${JSON.stringify(cookie)})' class="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-1.5 md:py-2 rounded-xl text-xs sm:text-sm transition-all">
+                  הוסף לסל
+                </button>
+              `}
+            </div>
+          `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderCart() {
+      const cartBar = document.getElementById('cart-bar');
+      const summaryText = document.getElementById('cart-summary-text');
+      const itemsList = document.getElementById('cart-items-list');
+      const buttonContainer = document.getElementById('order-button-container');
+
+      if (selectedCookies.length === 0) {
+        cartBar.classList.add('hidden');
+        // Remove padding
+        const paddingDiv = document.getElementById('cart-padding');
+        if (paddingDiv) paddingDiv.remove();
+        return;
+      }
+
+      cartBar.classList.remove('hidden');
+
+      // Add padding at the bottom of the body so cart doesn't overlap content
+      let paddingDiv = document.getElementById('cart-padding');
+      if (!paddingDiv) {
+        paddingDiv = document.createElement('div');
+        paddingDiv.id = 'cart-padding';
+        paddingDiv.className = 'h-48 md:h-32';
+        document.body.appendChild(paddingDiv);
+      }
+
+      summaryText.innerHTML = `נבחרו ${selectedCookies.length} עוגיות להזמנה <span class="text-[#E8B4A8] font-bold">| סה"כ לתשלום: ${selectedCookies.reduce((sum, item) => sum + item.price, 0)} ₪</span>`;
+
+      // Render individual cart items
+      itemsList.innerHTML = '';
+      selectedCookies.forEach((item, index) => {
+        const itemBadge = document.createElement('div');
+        itemBadge.className = "bg-[#F5E6D3] rounded-full px-3 py-1 flex items-center gap-2 text-sm";
+        itemBadge.innerHTML = `
+            <img src="${item.image}" alt="${item.name}" class="w-6 h-6 rounded-full object-cover shadow-sm border border-[#E8D4C8]" />
+            <span class="text-brand-brown">${item.name}</span>
+            <button onclick="removeCookieInstance(${index})" class="text-[#E8B4A8] hover:text-[#D89B8E] mr-1 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          `;
+        itemsList.appendChild(itemBadge);
+      });
+
+      // Render WhatsApp Order Button (Minimum 2 cookies)
+      buttonContainer.innerHTML = '';
+      if (selectedCookies.length >= 2) {
+        const btn = document.createElement('button');
+        btn.className = "w-full md:w-auto bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-white font-bold py-3 px-8 rounded-2xl text-lg transition-all shadow-lg hover:shadow-xl";
+        btn.innerText = `🛒 הזמן עכשיו דרך וואטסאפ (${selectedCookies.reduce((sum, item) => sum + item.price, 0)} ₪)`;
+        btn.onclick = openNameModal;
+        buttonContainer.appendChild(btn);
+      } else {
+        buttonContainer.innerHTML = `
+            <div class="flex flex-col items-center md:items-end gap-1 w-full md:w-auto">
+              <button disabled class="w-full md:w-auto bg-gray-300 text-gray-500 font-bold py-3 px-8 rounded-2xl text-lg cursor-not-allowed border-none">
+                🔒 מינימום להזמנה: 2 עוגיות
+              </button>
+              <p class="text-xs text-red-500 font-semibold text-center md:text-right">
+                בחר עוד ${2 - selectedCookies.length} עוגיות להשלמת ההזמנה
+              </p>
+            </div>
+          `;
+      }
+    }
+
+    function openNameModal() {
+      const modal = document.getElementById('name-modal');
+      const input = document.getElementById('client-name-input');
+      input.value = clientName;
+      modal.classList.remove('hidden');
+      input.focus();
+      validateModalSubmit();
+    }
+
+    function closeNameModal() {
+      const modal = document.getElementById('name-modal');
+      modal.classList.add('hidden');
+    }
+
+    function validateModalSubmit() {
+      const input = document.getElementById('client-name-input');
+      const submitBtn = document.getElementById('modal-submit-btn');
+      const value = input.value.trim();
+      submitBtn.disabled = !value;
+    }
+
+    function confirmOrder() {
+      const input = document.getElementById('client-name-input');
+      clientName = input.value.trim();
+      closeNameModal();
+
+      const counts = selectedCookies.reduce((acc, curr) => {
+        acc[curr.name] = (acc[curr.name] || 0) + 1;
+        return acc;
+      }, {});
+
+      const cookiesList = Object.entries(counts)
+        .map(([name, count]) => `- ${name} (${count} יחידות)`)
+        .join('\n');
+
+      const totalCookies = selectedCookies.length;
+      const totalPrice = selectedCookies.reduce((sum, c) => sum + c.price, 0);
+      const message = `היי, קוראים לי ${clientName} ואני רוצה להזמין ${totalCookies} עוגיות:\n${cookiesList}\n\nסה"כ לתשלום: ${totalPrice} ₪\nתודה!`;
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/972549232429?text=${encodedMessage}`;
+      window.open(whatsappUrl, '_blank');
+    }
+
+    function addCookie(cookie) {
+      selectedCookies.push({
+        ...cookie,
+        instanceId: `${cookie.id}-${Date.now()}-${Math.random()}`
+      });
+      renderCookies();
+      renderCart();
+    }
+
+    function removeOneCookie(cookieId) {
+      const index = selectedCookies.findIndex(c => c.id === cookieId);
+      if (index !== -1) {
+        selectedCookies.splice(index, 1);
+      }
+      renderCookies();
+      renderCart();
+    }
+
+    function removeCookieInstance(index) {
+      selectedCookies.splice(index, 1);
+      renderCookies();
+      renderCart();
+    }
+
+    // Initialize
+    renderCookies();
+    renderCart();
+  </script>
+</body>
+
+</html>
