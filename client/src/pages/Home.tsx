@@ -362,44 +362,14 @@ export default function Home() {
   };
 
   const renderPickupDetails = () => (
-    <div className="bg-[#FFF8F3] border-2 border-[#E8B4A8] rounded-2xl p-4 my-4 text-right space-y-2.5 shadow-sm" dir="rtl">
+    <div className="bg-[#FFF8F3] border-2 border-[#E8B4A8] rounded-2xl p-4 my-4 text-right space-y-2 shadow-sm" dir="rtl">
       <div className="flex items-center justify-center gap-2 font-black text-[#3D2817] text-base sm:text-lg bg-[#E8B4A8]/30 px-4 py-2 rounded-xl w-full text-center">
         <MapPin className="w-5 h-5 text-[#C85A54]" />
         <span className="text-[#C85A54] font-extrabold">📍 איסוף עצמי מחיפה בלבד!</span>
       </div>
-      <p className="text-sm text-[#6B4423]">
+      <p className="text-sm text-[#6B4423] text-center font-medium">
         <strong>מדיניות הזמנות:</strong> הזמנות בימים א'–ד', קבלת העוגיות בסוף השבוע (חמישי-שישי/שבת).
       </p>
-      <p className="text-xs text-[#6B4423] opacity-90">
-        📍 כתובת ומיקום מדויק בחיפה בתיאום מראש במספר 0512909911 / WhatsApp
-        {/* TODO: Replace with exact street address in Haifa when provided */}
-      </p>
-      <div className="flex flex-wrap gap-2 pt-2 justify-center">
-        <a
-          href="https://waze.com/ul?q=0512909911"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#33CCFF] hover:bg-[#28B8EB] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
-        >
-          🚗 Waze חיפה
-        </a>
-        <a
-          href="https://www.google.com/maps/search/?api=1&query=made+by+bareket+Haifa"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
-        >
-          🗺️ Google Maps
-        </a>
-        <a
-          href="https://wa.me/972549232429"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#25D366] hover:bg-[#20BA5A] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
-        >
-          💬 WhatsApp 054-9232429
-        </a>
-      </div>
     </div>
   );
 
@@ -1123,26 +1093,13 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="bg-[#FFF8F3] border-2 border-dashed border-[#E8D4C8] rounded-2xl p-5 space-y-3 text-right">
+                <div className="bg-[#FFF8F3] border-2 border-dashed border-[#E8D4C8] rounded-2xl p-5 space-y-3 text-center">
                   <p className="text-sm font-bold text-[#C85A54]">
                     📍 איסוף עצמי מחיפה בלבד!
                   </p>
                   <p className="text-sm text-[#6B4423]">
                     <strong>מועד איסוף:</strong> נקבע ליום <strong>{pickupDay}</strong> בטווח <strong>{pickupTimeSlot}</strong>.
                   </p>
-                  <p className="text-xs text-[#6B4423] opacity-90">
-                    איסוף בתיאום מראש בחיפה במספר 0512909911 / WhatsApp.
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <a
-                      href="https://wa.me/972549232429"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#25D366] text-white text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-1"
-                    >
-                      💬 WhatsApp לשאלות
-                    </a>
-                  </div>
                 </div>
 
                 <Button
