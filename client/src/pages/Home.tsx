@@ -1,23 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check } from 'lucide-react';
+import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, ExternalLink } from 'lucide-react';
 
 interface Cookie {
   id: string;
   name: string;
   price: number;
   emoji?: string;
-  image?: string;
+  image: string;
+  allergens?: string[];
 }
 
 interface CartItem {
   instanceId: string;
   type: 'single' | 'box';
-  id: string; // cookie ID, or 'box-4' / 'box-6'
+  id: string;
   name: string;
   price: number;
   image?: string;
-  flavors?: { cookie: Cookie; quantity: number }[]; // list of chosen flavors for box
+  flavors?: { cookie: Cookie; quantity: number }[];
   quantity: number;
 }
 
@@ -30,21 +31,21 @@ interface Review {
 }
 
 const COOKIES: Cookie[] = [
-  { id: '1', name: 'קורנפלקס', price: 15, image: 'cookies/cornflakes.jpg' },
-  { id: '2', name: 'כריות קליק', price: 16, image: 'cookies/kinder.jpeg' },
-  { id: '3', name: 'הרשיז', price: 16, image: 'cookies/oreo.jpg' },
-  { id: '4', name: 'בוואנו', price: 15, image: 'cookies/b1.jpeg' },
-  { id: '5', name: 'אמסטרדם', price: 15, image: 'cookies/amsterdam.png' },
-  { id: '6', name: 'בייגלה מלוח', price: 16, image: 'cookies/pretzel.png' },
-  { id: '7', name: 'לוטוס', price: 15, image: 'cookies/lotus.png' },
-  { id: '8', name: 'נוטלה', price: 13, image: 'cookies/nutella.png' },
-  { id: '9', name: 'במבה אדומה', price: 16, image: 'cookies/red_bamba.jpeg' },
-  { id: '10', name: 'שוקולד חלב', price: 13, image: 'cookies/milk_choclat.jpeg' },
-  { id: '11', name: 'טריקולד', price: 16, image: 'cookies/trikold.jpeg' },
-  { id: '12', name: 'ספרינקלס', price: 14, image: 'cookies/sprinkels.jpeg' },
-  { id: '13', name: "M&M's", price: 17, image: 'cookies/m&m.jpeg' },
-  { id: '14', name: 'חצי חצי', price: 16, image: 'cookies/half_half.jpeg' },
-  { id: '15', name: 'קינדר', price: 16, image: 'cookies/kinder.jpg' },
+  { id: '1', name: 'קורנפלקס', price: 15, image: '/cookies/cornflakes.jpg', allergens: ['חלב', 'גלוטן'] },
+  { id: '2', name: 'כריות קליק', price: 16, image: '/cookies/kinder.jpeg', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '3', name: 'הרשיז', price: 16, image: '/cookies/oreo.jpg', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '4', name: 'בוואנו', price: 15, image: '/cookies/b1.jpeg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '5', name: 'אמסטרדם', price: 15, image: '/cookies/amsterdam.png', allergens: ['חלב', 'גלוטן'] },
+  { id: '6', name: 'בייגלה מלוח', price: 16, image: '/cookies/pretzel.png', allergens: ['חלב', 'גלוטן', 'שומשום'] },
+  { id: '7', name: 'לוטוס', price: 15, image: '/cookies/lotus.png', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '8', name: 'נוטלה', price: 13, image: '/cookies/nutella.png', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '9', name: 'במבה אדומה', price: 16, image: '/cookies/red_bamba.jpeg', allergens: ['בוטנים', 'גלוטן', 'חלב'] },
+  { id: '10', name: 'שוקולד חלב', price: 13, image: '/cookies/milk_choclat.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '11', name: 'טריקולד', price: 16, image: '/cookies/trikold.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '12', name: 'ספרינקלס', price: 14, image: '/cookies/sprinkels.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '13', name: "M&M's", price: 17, image: '/cookies/m&m.jpeg', allergens: ['חלב', 'גלוטן', 'בוטנים'] },
+  { id: '14', name: 'חצי חצי', price: 16, image: '/cookies/half_half.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '15', name: 'קינדר', price: 16, image: '/cookies/kinder.jpg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
 ];
 
 interface BoxConfig {
@@ -64,66 +65,59 @@ const BOXES: BoxConfig[] = [
   { size: 10, name: 'מארז 10 עוגיות', price: 150, emoji: '🎉', description: 'הרכיבו מארז של 10 עוגיות בטעמים שתבחרו' },
 ];
 
-const TELEGRAM_BOT_TOKEN = "8848230768:AAEt9orzMdgl0HLry2kW12L1-XylnYe9F7Q" as string;
-const TELEGRAM_CHAT_ID = "8768411817" as string;
-
 export default function Home() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Cart state persisted in localStorage
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem('bareket_cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bareket_cart', JSON.stringify(cart));
+    } catch (e) {
+      console.error("Error saving cart to localStorage", e);
+    }
+  }, [cart]);
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 'success'>(1);
+  const [currentOrderId, setCurrentOrderId] = useState<string>('');
+
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [isSelfPickupConfirmed, setIsSelfPickupConfirmed] = useState(false);
   const [pickupDay, setPickupDay] = useState('');
   const [pickupTimeSlot, setPickupTimeSlot] = useState('');
   const [allergyConfirmed, setAllergyConfirmed] = useState(false);
   const [cancellationConfirmed, setCancellationConfirmed] = useState(false);
   const [hasBirthdaySign, setHasBirthdaySign] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   // Box customization state
   const [boxSize, setBoxSize] = useState<number | null>(null);
   const [boxFlavors, setBoxFlavors] = useState<Record<string, number>>({});
   const [editingBoxInstanceId, setEditingBoxInstanceId] = useState<string | null>(null);
   const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
-  const [isEditChoiceOpen, setIsEditChoiceOpen] = useState(false);
 
-  // Reviews state
-  const [reviews, setReviews] = useState<Review[]>([
+  // Reviews state (curated static list, no fake live localStorage persistence)
+  const reviews: Review[] = [
     { id: 'r1', name: 'שירה ד.', text: 'העוגיות הכי טעימות בארץ בפער! הכריות קליק פשוט מושלם והגיע חם ונימוח.', rating: 5, date: '12/07/2026' },
     { id: 'r2', name: 'גיא ל.', text: 'מזמין כל שבוע מחדש! השירות מדהים והעוגיות ממכרות בטירוף, במיוחד הקורנפלקס.', rating: 5, date: '10/07/2026' },
     { id: 'r3', name: 'מעיין א.', text: 'מארז מושלם לאירוחים או סתם כשמתחשק משהו מתוק ואיכותי. ממליצה בחום!', rating: 5, date: '05/07/2026' }
-  ]);
+  ];
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [newReviewName, setNewReviewName] = useState('');
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
+  const [reviewMessage, setReviewMessage] = useState('');
 
   const cookiesSectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const savedReviews = localStorage.getItem('bareket_reviews');
-    if (savedReviews) {
-      try {
-        setReviews(JSON.parse(savedReviews));
-      } catch (e) {
-        console.error("Error loading reviews", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkIfDesktop = () => {
-      const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isLargeScreen = window.innerWidth >= 1024;
-      setIsDesktop(!isMobileUA || isLargeScreen);
-    };
-    
-    checkIfDesktop();
-    window.addEventListener('resize', checkIfDesktop);
-    return () => window.removeEventListener('resize', checkIfDesktop);
-  }, []);
 
   const handleAddCookie = (cookie: Cookie) => {
     setCart(prev => {
@@ -214,14 +208,11 @@ export default function Home() {
 
   const handleUpgradeBoxSize = (newSize: number) => {
     setBoxSize(newSize);
-    
-    // Adjust flavors if newSize is smaller than current selections
     setBoxFlavors(prev => {
       const currentFlavors = { ...prev };
       let totalSelected = Object.values(currentFlavors).reduce((sum, val) => sum + val, 0);
       
       if (totalSelected > newSize) {
-        // Truncate flavors until we reach newSize
         const entries = Object.entries(currentFlavors).filter(([_, qty]) => qty > 0);
         for (const [cookieId, qty] of entries) {
           const diff = totalSelected - newSize;
@@ -276,7 +267,7 @@ export default function Home() {
           id: `box-${boxSize}`,
           name: boxName,
           price: boxPrice,
-          image: 'logo.png',
+          image: '/logo.png',
           flavors: selectedFlavorsList,
           quantity: 1
         }
@@ -289,27 +280,21 @@ export default function Home() {
 
   const handleAddReview = () => {
     if (!newReviewName.trim() || !newReviewText.trim()) return;
-    const newReview: Review = {
-      id: `r-${Date.now()}`,
-      name: newReviewName,
-      text: newReviewText,
-      rating: newReviewRating,
-      date: new Date().toLocaleDateString('he-IL')
-    };
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
-    localStorage.setItem('bareket_reviews', JSON.stringify(updatedReviews));
-    
-    setNewReviewName('');
-    setNewReviewText('');
-    setNewReviewRating(5);
-    setIsReviewModalOpen(false);
+    setReviewMessage("תודה רבה על הביקורת! היא נשלחה לבדיקה ❤️");
+    setTimeout(() => {
+      setNewReviewName('');
+      setNewReviewText('');
+      setNewReviewRating(5);
+      setReviewMessage('');
+      setIsReviewModalOpen(false);
+    }, 2000);
   };
 
   const handleOpenCheckout = () => {
     setCheckoutStep(1);
     setFullName('');
     setPhoneNumber('');
+    setPhoneError('');
     setIsSelfPickupConfirmed(false);
     setPickupDay('');
     setPickupTimeSlot('');
@@ -352,11 +337,29 @@ export default function Home() {
     return `סיכום הזמנה: ${summaryParts.join(' | ')} | סה״כ: ${getTotalPrice()} ₪`;
   };
 
-  const sendTelegramNotification = async () => {
-    if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "YOUR_CHAT_ID_HERE") {
-      console.warn("Telegram Chat ID is not configured.");
+  const handleProceedToPayment = async () => {
+    const cleanPhone = phoneNumber.replace(/[-\s]/g, '');
+    const isPhoneValid = /^05\d{8}$/.test(cleanPhone);
+    
+    if (!isPhoneValid) {
+      setPhoneError('נא להזין מספר טלפון נייד תקין בישראל (10 ספרות, למשל 0501234567)');
       return;
     }
+    setPhoneError('');
+
+    const isFormValid = 
+      fullName.trim() !== '' && 
+      pickupDay !== '' && 
+      pickupTimeSlot !== '' && 
+      allergyConfirmed && 
+      cancellationConfirmed && 
+      isSelfPickupConfirmed;
+
+    if (!isFormValid) return;
+
+    // Create unique order ID
+    const orderRef = `MB-${Math.floor(100000 + Math.random() * 900000)}`;
+    setCurrentOrderId(orderRef);
 
     const orderSummaryText = cart.map(item => {
       if (item.type === 'single') {
@@ -367,75 +370,99 @@ export default function Home() {
       }
     }).join('\n');
 
-    const totalPrice = getTotalPrice();
-
-    const now = new Date();
-    const formattedDateTime = now.toLocaleString('he-IL', {
-      timeZone: 'Asia/Jerusalem',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-
-    const birthdaySignText = hasBirthdaySign ? "כן (+5 ₪)" : "לא";
-
-    const message = `🚨 *הזמנה חדשה התקבלה מ-Made by Bareket!* 🍪\n\n*שם הלקוח:* ${fullName}\n*טלפון:* ${phoneNumber}\n*יום איסוף:* ${pickupDay}\n*טווח שעות איסוף:* ${pickupTimeSlot}\n*שלט מזל טוב:* ${birthdaySignText}\n\n*פירוט ההזמנה:*\n${orderSummaryText}\n\n*סכום לתשלום:* ${totalPrice} ₪\n*תאריך ושעה:* ${formattedDateTime}\n\n🔴 *מחכה לאימות תשלום ב-Bit!* ⚠️`;
-
+    // Notify backend
     try {
-      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      await fetch('/api/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: message,
-          parse_mode: 'Markdown',
+          orderId: orderRef,
+          fullName,
+          phoneNumber,
+          pickupDay,
+          pickupTimeSlot,
+          birthdaySign: hasBirthdaySign,
+          orderSummaryText,
+          totalPrice: getTotalPrice(),
         }),
       });
-
-      if (!response.ok) {
-        console.error('Failed to send Telegram notification:', await response.text());
-      }
-    } catch (error) {
-      console.error('Error sending Telegram notification:', error);
+    } catch (err) {
+      console.error("Order API request error:", err);
     }
+
+    // Advance to Step 2 (Payment confirmation view)
+    setCheckoutStep(2);
   };
 
-  const handlePaymentClick = async () => {
-    const cleanPhone = phoneNumber.replace(/[-\s]/g, '');
-    const isFormValid = 
-      fullName.trim() !== '' && 
-      cleanPhone.length >= 9 && 
-      pickupDay !== '' && 
-      pickupTimeSlot !== '' && 
-      allergyConfirmed && 
-      cancellationConfirmed && 
-      isSelfPickupConfirmed;
-
-    if (!isFormValid) return;
-
-    if (isDesktop) {
-      setCheckoutStep(2);
-    } else {
-      await sendTelegramNotification();
-
-      window.open('https://www.bitpay.co.il/app/me/ADF769B1-C5CB-4F12-98D2-C628177192C5', '_blank');
-
-      setCart([]);
-      setCheckoutStep('success');
-    }
-  };
-
-  const handleFinalizeDesktopPayment = async () => {
-    await sendTelegramNotification();
-    
+  const handleConfirmPayment = () => {
+    // Clear cart ONLY after user explicitly confirms Bit payment
     setCart([]);
+    try {
+      localStorage.removeItem('bareket_cart');
+    } catch {}
     setCheckoutStep('success');
   };
+
+  const renderAllergenBadges = (allergens?: string[]) => {
+    if (!allergens || allergens.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1 justify-center my-1.5">
+        {allergens.map(allergen => (
+          <span key={allergen} className="text-[10px] bg-[#FFF8F3] text-[#6B4423] border border-[#E8D4C8] px-1.5 py-0.5 rounded-full font-medium">
+            {allergen === 'חלב' && '🥛 '}
+            {allergen === 'גלוטן' && '🌾 '}
+            {allergen === 'בוטנים' && '🥜 '}
+            {allergen === 'אגוזים' && '🌰 '}
+            {allergen === 'סויה' && '🌱 '}
+            {allergen === 'שומשום' && '🌾 '}
+            {allergen}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const renderPickupDetails = () => (
+    <div className="bg-[#FFF8F3] border-2 border-[#E8D4C8] rounded-2xl p-4 my-4 text-right space-y-2" dir="rtl">
+      <div className="flex items-center gap-2 font-bold text-[#3D2817] text-base">
+        <MapPin className="w-5 h-5 text-[#E8B4A8]" />
+        <span>פרטי איסוף עצמי:</span>
+      </div>
+      <p className="text-sm text-[#6B4423]">
+        <strong>מדיניות הזמנות:</strong> הזמנות בימים א'–ד', קבלת העוגיות בסוף השבוע (חמישי-שישי/שבת).
+      </p>
+      <p className="text-xs text-[#6B4423] opacity-90">
+        📍 כתובת ומיקום מדויק בתיאום מראש במספר 0512909911 / WhatsApp
+        {/* TODO: Replace with exact street address when provided */}
+      </p>
+      <div className="flex flex-wrap gap-2 pt-2">
+        <a
+          href="https://waze.com/ul?q=0512909911"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#33CCFF] hover:bg-[#28B8EB] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
+        >
+          🚗 Waze
+        </a>
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=made+by+bareket"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
+        >
+          🗺️ Google Maps
+        </a>
+        <a
+          href="https://wa.me/972549232429"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#25D366] hover:bg-[#20BA5A] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
+        >
+          💬 WhatsApp 054-9232429
+        </a>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FFFBF7] via-[#FFF8F3] to-[#F5E6D3]">
@@ -463,7 +490,7 @@ export default function Home() {
         </a>
       </div>
 
-            {boxSize === null ? (
+      {boxSize === null ? (
         <div key="landing-page-view" className="space-y-12">
           {/* Hero Section */}
           <section className="relative overflow-hidden pt-8 pb-8 px-4">
@@ -474,20 +501,26 @@ export default function Home() {
 
             <div className="relative max-w-4xl mx-auto text-center">
               <div className="mb-4 flex justify-center animate-bounce" style={{ animationDuration: '3s' }}>
-                <img src="logo.png" alt="made.by.bareket logo" className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-lg border-4 border-white" />
+                <img src="/logo.png" alt="made.by.bareket logo" className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-lg border-4 border-white" />
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-[#3D2817] mb-4" style={{ fontFamily: 'Alef' }}>
                 made.by.bareket
               </h1>
-              <div className="inline-block bg-[#E8B4A8]/20 text-[#6B4423] font-bold px-4 py-2 rounded-full mb-6 text-sm md:text-base border border-[#E8B4A8]">
-                🕒 מזמינים ראשון עד רביעי ומקבלים בסופש
+              <div className="inline-block bg-[#E8B4A8]/20 text-[#6B4423] font-bold px-4 py-2 rounded-full mb-4 text-sm md:text-base border border-[#E8B4A8]">
+                🕒 מזמינים ראשון עד רביעי — מקבלים בסופ״ש
               </div>
-              <div className="h-1 w-24 bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] mx-auto rounded-full"></div>
+              
+              {/* Hero Pickup Card */}
+              <div className="max-w-md mx-auto">
+                {renderPickupDetails()}
+              </div>
+
+              <div className="h-1 w-24 bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] mx-auto rounded-full mt-4"></div>
             </div>
           </section>
 
           {/* Special Bundles Section */}
-          <section className="py-6 px-4 pb-20">
+          <section className="py-6 px-4">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-[#3D2817] text-center mb-2" style={{ fontFamily: 'Alef' }}>
                 מארזים מפנקים במחיר מיוחד 🎁
@@ -509,7 +542,7 @@ export default function Home() {
                     </div>
                     <Button
                       onClick={() => handleOpenBoxModal(box.size)}
-                      className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-2 md:py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-sm md:text-base"
+                      className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-2 md:py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-sm md:text-base"
                     >
                       הרכב מארז
                     </Button>
@@ -519,8 +552,75 @@ export default function Home() {
             </div>
           </section>
 
+          {/* Individual Cookies Catalog Section */}
+          <section className="py-10 px-4 bg-[#FFF8F3] border-t border-b border-[#E8D4C8]" ref={cookiesSectionRef}>
+            <div className="max-w-6xl mx-auto" dir="rtl">
+              <h2 className="text-3xl font-bold text-[#3D2817] text-center mb-2" style={{ fontFamily: 'Alef' }}>
+                עוגיות בודדות 🍪
+              </h2>
+              <p className="text-center text-[#6B4423] mb-8">
+                רוצים להוסיף עוגייה בודדת לסל? בחרו מהמגוון העשיר שלנו (כולל סימון אלרגנים)
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {COOKIES.map((cookie) => {
+                  const cartSingleItem = cart.find(item => item.type === 'single' && item.id === cookie.id);
+                  const qtyInCart = cartSingleItem ? cartSingleItem.quantity : 0;
+
+                  return (
+                    <div
+                      key={cookie.id}
+                      className="bg-white border-2 border-[#E8D4C8] hover:border-[#E8B4A8] rounded-2xl p-4 flex flex-col justify-between items-center text-center transition-all shadow-xs hover:shadow-md"
+                    >
+                      <div className="w-full flex flex-col items-center">
+                        <img
+                          src={cookie.image}
+                          alt={cookie.name}
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover shadow-sm border border-[#E8D4C8] mb-3"
+                        />
+                        <h3 className="font-bold text-[#3D2817] text-base">{cookie.name}</h3>
+                        <p className="text-sm font-extrabold text-[#E8B4A8] mt-1">{cookie.price} ₪</p>
+                        {renderAllergenBadges(cookie.allergens)}
+                      </div>
+
+                      <div className="w-full mt-3">
+                        {qtyInCart > 0 ? (
+                          <div className="flex items-center justify-between bg-[#F5E6D3] rounded-xl p-1 w-full border border-[#E8D4C8]">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveOneCookie(cookie.id)}
+                              className="w-8 h-8 flex items-center justify-center text-[#E8B4A8] hover:bg-white rounded-lg font-bold cursor-pointer transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="font-bold text-base text-[#3D2817]">{qtyInCart}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleAddCookie(cookie)}
+                              className="w-8 h-8 flex items-center justify-center text-[#E8B4A8] hover:bg-white rounded-lg font-bold cursor-pointer transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleAddCookie(cookie)}
+                            className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-2 rounded-xl text-sm transition-all shadow-sm active:scale-95 cursor-pointer"
+                          >
+                            הוסף לסל +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
           {/* Reviews Section */}
-          <section className="py-12 px-4 bg-[#FFF8F3] border-t border-b border-[#E8D4C8] pb-24">
+          <section className="py-12 px-4 pb-28">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-[#3D2817] text-center mb-2" style={{ fontFamily: 'Alef' }}>
                 לקוחות מפרגנים עלינו 💬
@@ -551,7 +651,7 @@ export default function Home() {
               <div className="text-center">
                 <Button
                   onClick={() => setIsReviewModalOpen(true)}
-                  className="bg-white border-2 border-[#E8B4A8] hover:bg-[#FFF8F3] text-[#E8B4A8] font-bold py-2 px-6 rounded-xl transition-all shadow-xs cursor-pointer"
+                  className="bg-white border-2 border-[#E8B4A8] hover:bg-[#FFF8F3] text-[#3D2817] font-bold py-2 px-6 rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   הוסף ביקורת משלך ✨
                 </Button>
@@ -574,12 +674,11 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-3 w-full sm:w-auto relative">
-              {/* Upgrade Button */}
               {BOXES.some(b => b.size !== boxSize) && (
                 <div className="relative">
                   <button
                     onClick={() => setShowUpgradeOptions(!showUpgradeOptions)}
-                    className="bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-white font-bold py-2.5 px-5 rounded-2xl text-sm transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                    className="bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-[#3D2817] font-bold py-2.5 px-5 rounded-2xl text-sm transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>⚡ שדרוג/שינוי מארז</span>
                     <span className="text-xs opacity-80">▼</span>
@@ -605,7 +704,7 @@ export default function Home() {
               
               <button
                 onClick={handleCloseBoxModal}
-                className="border-2 border-[#E8B4A8] text-[#E8B4A8] hover:bg-[#F5E6D3] font-bold py-2 px-5 rounded-2xl text-sm transition-all cursor-pointer"
+                className="border-2 border-[#E8B4A8] text-[#3D2817] hover:bg-[#F5E6D3] font-bold py-2 px-5 rounded-2xl text-sm transition-all cursor-pointer"
               >
                 ביטול
               </button>
@@ -629,7 +728,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Cookies Grid */}
+          {/* Cookies Configurator Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-24">
             {COOKIES.map((cookie) => {
               const count = boxFlavors[cookie.id] || 0;
@@ -642,19 +741,17 @@ export default function Home() {
                     count > 0 ? 'border-[#E8B4A8] shadow-md scale-[1.02]' : 'border-[#E8D4C8] hover:border-[#E8B4A8]'
                   }`}
                 >
-                  <div className="w-full">
-                    <div className="flex justify-center mb-3">
-                      <img
-                        src={cookie.image}
-                        alt={cookie.name}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm border border-[#E8D4C8]"
-                      />
-                    </div>
+                  <div className="w-full flex flex-col items-center">
+                    <img
+                      src={cookie.image}
+                      alt={cookie.name}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm border border-[#E8D4C8] mb-2"
+                    />
                     <h3 className="font-bold text-[#3D2817] text-base mb-1 line-clamp-1">{cookie.name}</h3>
-                    <div className="mb-4"></div>
+                    {renderAllergenBadges(cookie.allergens)}
                   </div>
 
-                  <div className="w-full">
+                  <div className="w-full mt-3">
                     {count > 0 ? (
                       <div className="flex items-center justify-between bg-[#F5E6D3] rounded-xl p-1 w-full border border-[#E8D4C8]">
                         <button
@@ -684,7 +781,7 @@ export default function Home() {
                         className={`w-full font-bold py-2 rounded-xl text-sm transition-all duration-300 ${
                           totalSelected >= boxSize
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-[#E8B4A8] hover:bg-[#D89B8E] text-white cursor-pointer active:scale-95'
+                            : 'bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] cursor-pointer active:scale-95'
                         }`}
                       >
                         הוסף למארז
@@ -711,7 +808,7 @@ export default function Home() {
               {Object.values(boxFlavors).reduce((sum, val) => sum + val, 0) === boxSize ? (
                 <button
                   onClick={handleAddBoxToCart}
-                  className="w-full sm:w-auto bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-white font-bold py-3.5 px-10 rounded-2xl text-base transition-all duration-300 shadow-md cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-[#3D2817] font-bold py-3.5 px-10 rounded-2xl text-base transition-all duration-300 shadow-md cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span>{editingBoxInstanceId ? 'שמור שינויים במארז ✨' : 'הוסף מארז לסל 🛒'}</span>
                 </button>
@@ -729,8 +826,6 @@ export default function Home() {
         </div>
       )}
 
-      
-
       {/* Sticky Cart Bar */}
       {cart.length > 0 && !isCartOpen && boxSize === null && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-[#E8B4A8] shadow-2xl p-4 z-50 animate-slide-up">
@@ -742,366 +837,175 @@ export default function Home() {
                   <span className="text-gray-300 mx-2">|</span>
                   סה"כ לתשלום: <span className="text-[#E8B4A8] font-bold">{getTotalPrice()} ₪</span>
                 </p>
-                {/* List of items inside the sticky bar with delete functionality */}
                 <div className="flex flex-wrap gap-2 justify-start max-h-20 overflow-y-auto">
                   {cart.map((item) => (
                     <div
                       key={item.instanceId}
                       className="bg-[#F5E6D3] rounded-full px-3 py-1 flex items-center gap-2 text-sm border border-[#E8D4C8] shadow-xs"
                     >
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-6 h-6 rounded-full object-cover shadow-xs border border-[#E8D4C8]"
-                        />
-                      ) : (
-                        <span className="text-sm">🍪</span>
+                      <span className="font-bold text-[#3D2817]">{item.name}</span>
+                      {item.type === 'box' && (
+                        <button
+                          onClick={() => handleOpenBoxModal(parseInt(item.id.replace('box-', '')), item.instanceId)}
+                          className="text-xs text-[#E8B4A8] hover:underline font-semibold"
+                        >
+                          (ערוך)
+                        </button>
                       )}
-                      <span className="text-[#3D2817] font-semibold">
-                        {item.name} {item.quantity > 1 ? `(x${item.quantity})` : ''}
-                      </span>
+                      <span className="text-[#6B4423] font-bold">x{item.quantity}</span>
                       <button
                         onClick={() => handleRemoveCartItem(item.instanceId)}
-                        className="text-[#E8B4A8] hover:text-red-500 mr-1 flex items-center transition-colors cursor-pointer"
-                        title="הסר מהסל"
+                        className="text-red-500 hover:text-red-700 font-bold text-xs p-0.5 rounded-full hover:bg-white transition-colors cursor-pointer"
+                        title="הסר פריט"
                       >
-                        <X size={14} />
+                        ✕
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <Button
-                className="w-full md:w-auto bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] hover:from-[#D89B8E] hover:to-[#C88A7E] text-white font-bold py-2.5 px-6 rounded-xl text-sm sm:text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer animate-pulse"
-                style={{ animationDuration: '3s' }}
-                onClick={() => setIsCartOpen(true)}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span>צפייה בסל ({getTotalPrice()} ₪)</span>
-              </Button>
+              <div className="flex gap-3 w-full md:w-auto">
+                <Button
+                  onClick={() => setIsCartOpen(true)}
+                  variant="outline"
+                  className="border-[#E8B4A8] text-[#3D2817] hover:bg-[#FFF8F3] rounded-2xl py-3.5 px-6 font-bold cursor-pointer"
+                >
+                  <ShoppingCart className="w-5 h-5 ml-2" />
+                  צפייה בסל ({cart.length})
+                </Button>
+                <Button
+                  onClick={handleOpenCheckout}
+                  className="flex-1 md:flex-none bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-3.5 px-8 rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  קופה לתשלום 💳
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-          {/* Floating Edit Box Button */}
-      {boxSize === null && !isCartOpen && cart.some(item => item.type === 'box') && (
-        <div className="fixed bottom-24 right-6 z-40">
-          <button
-            onClick={() => {
-              const boxes = cart.filter(item => item.type === 'box');
-              if (boxes.length === 1) {
-                const box = boxes[0];
-                const size = parseInt(box.id.replace('box-', '')) || 4;
-                handleOpenBoxModal(size, box.instanceId);
-              } else {
-                setIsEditChoiceOpen(true);
-              }
-            }}
-            className="bg-white hover:bg-[#FFF8F3] text-[#3D2817] border-2 border-[#E8B4A8] font-bold py-3 px-5 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2 cursor-pointer"
-            title="עריכת מארז קיים"
-            dir="rtl"
-          >
-            <span>📝 עריכת מארז בסל</span>
-          </button>
-        </div>
-      )}
-
-      {/* Sliding Cart Drawer */}
+      {/* Cart Drawer Modal */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[100] overflow-hidden" dir="rtl">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity" onClick={() => setIsCartOpen(false)} />
-          
-          <div className="absolute inset-y-0 right-0 max-w-full flex">
-            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full border-l-2 border-[#E8D4C8]">
-              {/* Drawer Header */}
-              <div className="px-6 py-5 border-b border-[#E8D4C8] flex justify-between items-center bg-[#FFF8F3]">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-6 h-6 text-[#E8B4A8]" />
-                  <h3 className="text-xl font-bold text-[#3D2817]" style={{ fontFamily: 'Alef' }}>סל הקניות שלך</h3>
-                </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-start animate-fade-in">
+          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto" dir="rtl">
+            <div>
+              <div className="flex justify-between items-center pb-4 border-b border-[#E8D4C8] mb-6">
+                <h2 className="text-2xl font-bold text-[#3D2817]" style={{ fontFamily: 'Alef' }}>
+                  סל הקניות שלך 🛒
+                </h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                 >
-                  <X size={20} />
+                  <X size={24} />
                 </button>
               </div>
 
-              {/* Drawer Body (Items List) */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-center space-y-3">
-                    <span className="text-5xl">🍪</span>
-                    <p className="text-lg font-bold text-[#3D2817]">סל הקניות ריק</p>
-                    <p className="text-sm text-[#6B4423]">התחילו לבחור עוגיות ומארזים מהתפריט!</p>
-                  </div>
-                ) : (
-                  cart.map((item) => (
-                    <div key={item.instanceId} className="flex gap-3 bg-[#FFFBF7] border border-[#E8D4C8] p-3 rounded-2xl relative shadow-xs text-right">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-16 rounded-xl object-cover border border-[#E8D4C8]"
-                      />
-                      
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <h4 className="font-bold text-[#3D2817] text-sm sm:text-base">{item.name}</h4>
-                          {item.type === 'box' && item.flavors && (
-                            <>
-                              <p className="text-xs text-[#6B4423] mt-1 leading-relaxed">
-                                {item.flavors.map(f => `${f.cookie.name} (${f.quantity})`).join(', ')}
-                              </p>
-                              <button
-                                onClick={() => {
-                                  const sizeNum = parseInt(item.id.replace('box-', '')) || 4;
-                                  handleOpenBoxModal(sizeNum, item.instanceId);
-                                }}
-                                className="text-xs text-[#E8B4A8] hover:text-[#D89B8E] mt-1 font-semibold flex items-center gap-1 cursor-pointer"
-                              >
-                                ערוך הרכב מארז 📝
-                              </button>
-                            </>
-                          )}
-                          <p className="text-xs font-bold text-[#E8B4A8] mt-1">{item.price} ₪</p>
-                        </div>
-
-                        {/* Adjust quantities */}
-                        <div className="flex items-center justify-between mt-2.5">
-                          <div className="flex items-center gap-2 bg-[#F5E6D3] rounded-xl px-1.5 py-0.5 border border-[#E8D4C8]">
-                            <button
-                              onClick={() => handleUpdateQuantity(item.instanceId, -1)}
-                              className="text-[#E8B4A8] hover:text-[#D89B8E] font-bold text-base w-5 h-5 flex items-center justify-center cursor-pointer"
-                            >
-                              -
-                            </button>
-                            <span className="font-bold text-sm text-[#3D2817] w-4 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => handleUpdateQuantity(item.instanceId, 1)}
-                              className="text-[#E8B4A8] hover:text-[#D89B8E] font-bold text-base w-5 h-5 flex items-center justify-center cursor-pointer"
-                            >
-                              +
-                            </button>
-                          </div>
-                          
-                          <span className="font-bold text-sm text-[#3D2817]">{item.price * item.quantity} ₪</span>
-                        </div>
+              <div className="space-y-4 mb-6">
+                {cart.map((item) => (
+                  <div key={item.instanceId} className="bg-[#FFF8F3] border border-[#E8D4C8] rounded-2xl p-4 shadow-xs">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-[#3D2817] text-lg">{item.name}</h3>
+                        <p className="text-sm font-extrabold text-[#E8B4A8]">{item.price * item.quantity} ₪</p>
                       </div>
-
-                      {/* Remove Button */}
                       <button
                         onClick={() => handleRemoveCartItem(item.instanceId)}
-                        className="absolute top-2 left-2 text-gray-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
-                        title="הסר מהסל"
+                        className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
-                  ))
-                )}
-              </div>
 
-              {/* Drawer Footer */}
-              {cart.length > 0 && (
-                <div className="border-t border-[#E8D4C8] px-6 py-5 bg-[#FFF8F3] space-y-4">
-                  {/* Happy Birthday upgrade */}
-                  <div className="bg-white p-3 rounded-2xl border border-[#E8D4C8] flex justify-between items-center shadow-xs">
-                    <label className="flex gap-2.5 items-center cursor-pointer text-sm text-[#6B4423] w-full">
-                      <input
-                        type="checkbox"
-                        checked={hasBirthdaySign}
-                        onChange={(e) => setHasBirthdaySign(e.target.checked)}
-                        className="w-4 h-4 rounded border-2 border-[#E8D4C8] text-[#E8B4A8] accent-[#E8B4A8] cursor-pointer"
-                      />
-                      <span className="flex items-center gap-1.5 mr-2">
-                        <span>🎂</span>
-                        <strong>הוספת שלט "מזל טוב" קטן</strong> (+5 ₪)
-                      </span>
-                    </label>
-                  </div>
-
-                  <div className="space-y-1.5 text-right">
-                    <div className="flex justify-between text-sm text-[#6B4423]">
-                      <span>סיכום ביניים:</span>
-                      <span>{getSubtotal()} ₪</span>
-                    </div>
-                    {hasBirthdaySign && (
-                      <div className="flex justify-between text-sm text-[#6B4423]">
-                        <span>שלט מזל טוב:</span>
-                        <span>5 ₪</span>
+                    {item.flavors && item.flavors.length > 0 && (
+                      <div className="text-xs text-[#6B4423] bg-white p-2.5 rounded-xl border border-[#E8D4C8] my-2 space-y-1">
+                        <p className="font-bold text-[#3D2817] mb-1">טעמים במארז:</p>
+                        {item.flavors.map(f => (
+                          <p key={f.cookie.id}>• {f.cookie.name} x{f.quantity}</p>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setIsCartOpen(false);
+                            handleOpenBoxModal(parseInt(item.id.replace('box-', '')), item.instanceId);
+                          }}
+                          className="text-[#E8B4A8] font-bold text-xs hover:underline mt-2 inline-block cursor-pointer"
+                        >
+                          ✏️ ערוך הרכב מארז
+                        </button>
                       </div>
                     )}
-                    <div className="flex justify-between text-lg font-bold text-[#3D2817] border-t border-[#E8D4C8] pt-2 mt-1">
-                      <span>סה"כ לתשלום:</span>
-                      <span>{getTotalPrice()} ₪</span>
+
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#E8D4C8]">
+                      <span className="text-xs text-[#6B4423] font-semibold">כמות:</span>
+                      <div className="flex items-center gap-3 bg-white px-3 py-1 rounded-xl border border-[#E8D4C8]">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.instanceId, -1)}
+                          className="text-[#E8B4A8] font-bold hover:bg-gray-100 rounded px-1 cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="font-bold text-[#3D2817] text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.instanceId, 1)}
+                          className="text-[#E8B4A8] font-bold hover:bg-gray-100 rounded px-1 cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {getTotalCookieCount() >= 2 ? (
-                    <Button
-                      className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-3.5 rounded-2xl text-base transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-                      onClick={() => {
-                        setIsCartOpen(false);
-                        handleOpenCheckout();
-                      }}
-                    >
-                      <span>מעבר לקופה</span>
-                    </Button>
-                  ) : (
-                    <div className="space-y-1">
-                      <Button
-                        disabled
-                        className="w-full bg-gray-300 text-gray-500 font-bold py-3.5 rounded-2xl text-base cursor-not-allowed"
-                      >
-                        🔒 מינימום להזמנה: 2 עוגיות
-                      </Button>
-                      <p className="text-xs text-red-500 font-semibold text-center">
-                        בחרו עוד {2 - getTotalCookieCount()} עוגיות להשלמת המינימום
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Birthday sign option */}
+              <div className="bg-[#FFF8F3] p-4 rounded-2xl border border-[#E8D4C8] mb-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasBirthdaySign}
+                    onChange={(e) => setHasBirthdaySign(e.target.checked)}
+                    className="w-5 h-5 accent-[#E8B4A8] rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-[#3D2817] text-sm">הוספת שלט "מזל טוב" 🎉</span>
+                    <span className="text-xs text-[#E8B4A8] font-extrabold mr-2">(+5 ₪)</span>
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      
-
-      {/* Edit Choice Modal */}
-      {isEditChoiceOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-[110] transition-opacity duration-300">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-[#E8D4C8] relative" dir="rtl">
-            <button
-              onClick={() => setIsEditChoiceOpen(false)}
-              className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={20} />
-            </button>
-            <h3 className="text-2xl font-bold text-[#3D2817] text-center mb-6" style={{ fontFamily: 'Alef' }}>
-              בחירת מארז לעריכה
-            </h3>
-            
-            <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-1 pl-1">
-              {cart
-                .filter(item => item.type === 'box')
-                .map((item, idx) => {
-                  const size = parseInt(item.id.replace('box-', '')) || 4;
-                  return (
-                    <button
-                      key={item.instanceId}
-                      onClick={() => {
-                        handleOpenBoxModal(size, item.instanceId);
-                        setIsEditChoiceOpen(false);
-                      }}
-                      className="w-full text-right bg-[#FFFBF7] hover:bg-[#FFF8F3] border-2 border-[#E8D4C8] hover:border-[#E8B4A8] p-4 rounded-2xl transition-all flex justify-between items-center group cursor-pointer"
-                    >
-                      <div className="text-right">
-                        <span className="font-bold text-[#3D2817] block">
-                          מארז #{idx + 1} ({size} עוגיות)
-                        </span>
-                        <span className="text-xs text-[#6B4423] mt-1 block line-clamp-1 leading-relaxed">
-                          {item.flavors ? item.flavors.map(f => `${f.cookie.name} (${f.quantity})`).join(', ') : ''}
-                        </span>
-                      </div>
-                      <span className="text-[#E8B4A8] group-hover:translate-x-[-4px] transition-transform font-bold text-lg">📝</span>
-                    </button>
-                  );
-                })}
-            </div>
-            
-            <button
-              onClick={() => setIsEditChoiceOpen(false)}
-              className="w-full border-2 border-[#E8B4A8] text-[#E8B4A8] hover:bg-[#F5E6D3] font-bold py-3 rounded-2xl text-base transition-all cursor-pointer text-center"
-            >
-              סגירה
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Write a Review Modal */}
-      {isReviewModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-[110] transition-opacity duration-300">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-[#E8D4C8] relative" dir="rtl">
-            <button
-              onClick={() => setIsReviewModalOpen(false)}
-              className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={20} />
-            </button>
-            <h3 className="text-2xl font-bold text-[#3D2817] text-center mb-6" style={{ fontFamily: 'Alef' }}>
-              כתיבת ביקורת
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-[#3D2817] mb-1.5">שם מלא</label>
-                <input
-                  type="text"
-                  placeholder="השם שלך..."
-                  value={newReviewName}
-                  onChange={(e) => setNewReviewName(e.target.value)}
-                  className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] focus:outline-none p-3 text-right bg-[#FFF8F3]"
-                />
+            <div className="border-t border-[#E8D4C8] pt-4 space-y-4">
+              <div className="flex justify-between items-center text-lg font-bold text-[#3D2817]">
+                <span>סה"כ לתשלום:</span>
+                <span className="text-[#E8B4A8] text-2xl font-black">{getTotalPrice()} ₪</span>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-[#3D2817] mb-1.5 font-bold">דירוג עוגיות</label>
-                <div className="flex gap-2 justify-center py-2 text-amber-400">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setNewReviewRating(i + 1)}
-                      className="transition-transform active:scale-125 cursor-pointer"
-                    >
-                      <Star className={`w-8 h-8 ${i < newReviewRating ? 'fill-current text-amber-400' : 'text-gray-300'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-[#3D2817] mb-1.5">תוכן הביקורת</label>
-                <textarea
-                  placeholder="איך היו העוגיות? מה הכי אהבתם?..."
-                  rows={4}
-                  value={newReviewText}
-                  onChange={(e) => setNewReviewText(e.target.value)}
-                  className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] focus:outline-none p-3 text-right bg-[#FFF8F3] resize-none"
-                />
-              </div>
-
               <Button
-                disabled={!newReviewName.trim() || !newReviewText.trim()}
-                onClick={handleAddReview}
-                className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-3.5 rounded-2xl text-base transition-all duration-300 cursor-pointer"
+                onClick={() => {
+                  setIsCartOpen(false);
+                  handleOpenCheckout();
+                }}
+                className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-4 rounded-2xl text-lg shadow-md cursor-pointer"
               >
-                פרסם ביקורת 🚀
+                המשך לקופה לתשלום 💳
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2-Step Checkout Modal */}
+      {/* Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-[100] transition-opacity duration-300">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-2 border-[#E8D4C8] relative max-h-[90vh] overflow-y-auto">
-            {/* Close Button */}
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsCheckoutOpen(false)}
-              className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute top-4 left-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
 
-            {/* Order Summary (At the very top) */}
             {checkoutStep !== 'success' && (
               <div className="bg-[#FFF8F3] border border-[#E8D4C8] p-3.5 rounded-2xl mb-6 text-center text-sm font-semibold text-[#6B4423] mt-2" dir="rtl">
                 {getOrderSummaryText()}
@@ -1116,7 +1020,7 @@ export default function Home() {
                     פרטי לקוח ואיסוף
                   </h3>
                   <p className="text-sm text-[#6B4423]">
-                    מלאו את הפרטים והסכימו לתנאים כדי להשלים את ההזמנה
+                    מלאו את הפרטים והסכימו לתנאים כדי להמשיך לתשלום
                   </p>
                 </div>
 
@@ -1138,22 +1042,28 @@ export default function Home() {
 
                   <div>
                     <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      מספר טלפון <span className="text-red-500 font-bold">*</span>
+                      מספר טלפון (10 ספרות, למשל 0501234567) <span className="text-red-500 font-bold">*</span>
                     </label>
                     <input
                       type="tel"
-                      placeholder="הכנס מספר טלפון..."
+                      placeholder="0500000000"
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onChange={(e) => {
+                        setPhoneNumber(e.target.value);
+                        setPhoneError('');
+                      }}
                       className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3]"
                       dir="rtl"
                     />
+                    {phoneError && (
+                      <p className="text-red-500 text-xs mt-1 font-semibold">{phoneError}</p>
+                    )}
                   </div>
 
                   {/* Pick-up Day Selector */}
                   <div>
                     <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      יום איסוף <span className="text-red-500 font-bold">*</span>
+                      יום איסוף (בסוף השבוע) <span className="text-red-500 font-bold">*</span>
                     </label>
                     <select
                       value={pickupDay}
@@ -1170,7 +1080,7 @@ export default function Home() {
                   {/* Pick-up Time Window Selector */}
                   <div>
                     <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      טווח שעות איסוף (שעתיים בין 09:00-20:00) <span className="text-red-500 font-bold">*</span>
+                      טווח שעות איסוף <span className="text-red-500 font-bold">*</span>
                     </label>
                     <select
                       value={pickupTimeSlot}
@@ -1187,6 +1097,8 @@ export default function Home() {
                     </select>
                   </div>
                 </div>
+
+                {renderPickupDetails()}
 
                 <div className="space-y-2 mt-4 pt-2 border-t border-gray-100">
                   {/* Allergy policy checkbox */}
@@ -1219,7 +1131,7 @@ export default function Home() {
                     </label>
                   </div>
 
-                  {/* Self-Pickup Checkbox */}
+                  {/* Self-Pickup Checkbox (Aligned without 7 business days) */}
                   <div className="bg-[#FFFBF7] p-2.5 rounded-xl border border-gray-100">
                     <label className="flex gap-2.5 items-start cursor-pointer text-xs sm:text-sm text-[#6B4423]">
                       <input
@@ -1229,18 +1141,19 @@ export default function Home() {
                         className="mt-1 w-4 h-4 rounded border-2 border-[#E8D4C8] text-[#E8B4A8] focus:ring-[#E8B4A8] accent-[#E8B4A8] cursor-pointer"
                       />
                       <span className="mr-2">
-                        <span className="text-red-500 font-bold">*</span> אני מאשר/ת שההזמנה היא לאיסוף עצמי בלבד (עד 7 ימי עסקים).
+                        <span className="text-red-500 font-bold">*</span> אני מאשר/ת שההזמנה היא לאיסוף עצמי בסוף השבוע (הזמנות בימים א'–ד').
                       </span>
                     </label>
                   </div>
                 </div>
 
-                {/* Dynamic Payment Button */}
+                {/* Submit button */}
                 {(() => {
                   const cleanPhone = phoneNumber.replace(/[-\s]/g, '');
+                  const isPhoneValid = /^05\d{8}$/.test(cleanPhone);
                   const isFormValid = 
                     fullName.trim() !== '' && 
-                    cleanPhone.length >= 9 && 
+                    isPhoneValid &&
                     pickupDay !== '' && 
                     pickupTimeSlot !== '' && 
                     allergyConfirmed && 
@@ -1251,21 +1164,21 @@ export default function Home() {
                     <div className="pt-4 flex gap-3">
                       <Button
                         variant="outline"
-                        className="border-[#E8B4A8] text-[#E8B4A8] hover:bg-[#F5E6D3] rounded-2xl py-3.5 px-4 text-base transition-colors duration-200 cursor-pointer"
+                        className="border-[#E8B4A8] text-[#3D2817] hover:bg-[#F5E6D3] rounded-2xl py-3.5 px-4 text-base transition-colors duration-200 cursor-pointer"
                         onClick={() => setIsCheckoutOpen(false)}
                       >
                         ביטול
                       </Button>
                       <Button
                         disabled={!isFormValid}
-                        onClick={handlePaymentClick}
+                        onClick={handleProceedToPayment}
                         className={`flex-1 font-bold py-3.5 rounded-2xl text-base transition-all duration-300 cursor-pointer ${
                           isFormValid
-                            ? 'bg-[#E8B4A8] hover:bg-[#D89B8E] text-white shadow-md hover:shadow-lg active:scale-[0.98]'
+                            ? 'bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] shadow-md hover:shadow-lg active:scale-[0.98]'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed border-none shadow-none'
                         }`}
                       >
-                        לתשלום ב-Bit
+                        המשך לתשלום ב-Bit 💳
                       </Button>
                     </div>
                   );
@@ -1273,42 +1186,59 @@ export default function Home() {
               </div>
             )}
 
-            {/* Step 2: Desktop only Payment Info */}
+            {/* Step 2: Clear & Explicit Payment Step with Order Number */}
             {checkoutStep === 2 && (
               <div className="text-right space-y-6" dir="rtl">
                 <div className="text-center mb-2">
-                  <h3 className="text-2xl font-bold text-[#3D2817] mb-1" style={{ fontFamily: 'Alef' }}>
-                    תשלום מהמחשב
+                  <span className="bg-[#E8B4A8]/20 text-[#6B4423] font-bold px-4 py-1.5 rounded-full text-sm inline-block mb-2">
+                    הזמנה מספר #{currentOrderId}
+                  </span>
+                  <h3 className="text-2xl font-bold text-[#3D2817]" style={{ fontFamily: 'Alef' }}>
+                    אישור ותשלום ב-Bit
                   </h3>
                 </div>
 
-                <p className="text-base text-[#3D2817] leading-relaxed bg-[#FFF8F3] border border-[#E8D4C8] p-4 rounded-2xl text-center font-semibold">
-                  גולשים מהמחשב? סרקו את הברקוד או העבירו למספר 0512909911
-                </p>
-
-                <div className="flex flex-col items-center justify-center p-4 bg-[#FFF8F3] border-2 border-[#E8D4C8] rounded-2xl text-center space-y-2">
-                  <div className="bg-white p-2 rounded-xl shadow-xs border border-[#E8D4C8] max-w-[160px] mx-auto">
-                    <img
-                      src="qr_code.jpg"
-                      alt="קוד QR לתשלום בביט"
-                      className="w-full h-auto rounded-lg object-contain"
-                    />
-                  </div>
+                {/* Big & Clear Exact Sum Display */}
+                <div className="bg-[#FFF8F3] border-2 border-[#E8B4A8] rounded-2xl p-5 text-center shadow-sm">
+                  <p className="text-sm font-semibold text-[#6B4423] mb-1">סכום מדויק להעברה:</p>
+                  <p className="text-4xl font-black text-[#C85A54] tracking-tight">{getTotalPrice()} ₪</p>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="space-y-3">
+                  <a
+                    href="https://www.bitpay.co.il/app/me/ADF769B1-C5CB-4F12-98D2-C628177192C5"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#00A896] hover:bg-[#008678] text-white font-bold py-4 px-6 rounded-2xl text-center block shadow-md hover:shadow-lg transition-all text-lg cursor-pointer"
+                  >
+                    📲 לחצו כאן למעבר תשלום ב-Bit
+                  </a>
+
+                  <a
+                    href={`https://wa.me/972549232429?text=${encodeURIComponent(`היי! ביצעתי העברת Bit עבור הזמנה #${currentOrderId} על שם ${fullName} בסך ${getTotalPrice()} ₪ 🍪`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold py-3.5 px-6 rounded-2xl text-center flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all text-base cursor-pointer"
+                  >
+                    💬 שלח אישור תשלום בוואטסאפ
+                  </a>
+                </div>
+
+                {renderPickupDetails()}
+
+                <div className="flex gap-3 pt-2 border-t border-gray-100">
                   <Button
                     variant="outline"
-                    className="border-[#E8B4A8] text-[#E8B4A8] hover:bg-[#F5E6D3] rounded-2xl py-3.5 px-4 text-base transition-colors duration-200 cursor-pointer"
+                    className="border-[#E8B4A8] text-[#3D2817] hover:bg-[#F5E6D3] rounded-2xl py-3.5 px-4 text-base transition-colors duration-200 cursor-pointer"
                     onClick={() => setCheckoutStep(1)}
                   >
                     חזור
                   </Button>
                   <Button
-                    onClick={handleFinalizeDesktopPayment}
-                    className="flex-1 bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-3.5 rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
+                    onClick={handleConfirmPayment}
+                    className="flex-1 bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-extrabold py-4 rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                   >
-                    סרקתי והעברתי
+                    שילמתי ב-Bit, אשר הזמנה ✨
                   </Button>
                 </div>
               </div>
@@ -1317,7 +1247,6 @@ export default function Home() {
             {/* Step 3: Success Screen */}
             {checkoutStep === 'success' && (
               <div className="text-center space-y-6 py-4" dir="rtl">
-                {/* Bouncing Cookie Icon */}
                 <div className="flex justify-center">
                   <div className="text-6xl md:text-7xl animate-bounce" style={{ animationDuration: '2s' }}>
                     🍪
@@ -1325,26 +1254,113 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-3">
+                  <span className="bg-[#E8B4A8]/20 text-[#6B4423] font-bold px-4 py-1.5 rounded-full text-sm inline-block">
+                    הזמנה #{currentOrderId} אושרה!
+                  </span>
                   <h3 className="text-2xl md:text-3xl font-extrabold text-[#E8B4A8]" style={{ fontFamily: 'Alef' }}>
                     העוגיות כבר בתנור! ✨
                   </h3>
                   <p className="text-base text-[#3D2817] font-semibold leading-relaxed">
-                    קיבלנו את פרטי ההזמנה שלך ואנחנו כבר מתחילים לעבוד עליה באהבה!
+                    תודה רבה {fullName}! קיבלנו את ההזמנה ואנחנו מתחילים להכין אותה באהבה!
                   </p>
                 </div>
 
                 <div className="bg-[#FFF8F3] border-2 border-dashed border-[#E8D4C8] rounded-2xl p-5 space-y-3 text-right">
-                  <p className="text-sm text-[#6B4423] flex items-center gap-2">
-                    <span>🕒</span>
-                    <span><strong>פרטי איסוף:</strong> ההזמנה שלך נקבעה ליום <strong>{pickupDay}</strong> בטווח השעות <strong>{pickupTimeSlot}</strong> לאיסוף עצמי.</span>
+                  <p className="text-sm text-[#6B4423]">
+                    <strong>איסוף עצמי:</strong> נקבע ליום <strong>{pickupDay}</strong> בטווח <strong>{pickupTimeSlot}</strong>.
                   </p>
+                  <p className="text-xs text-[#6B4423] opacity-90">
+                    איסוף בתיאום מראש במספר 0512909911 / WhatsApp.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <a
+                      href="https://wa.me/972549232429"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#25D366] text-white text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-1"
+                    >
+                      💬 WhatsApp לשאלות
+                    </a>
+                  </div>
                 </div>
 
                 <Button
                   onClick={() => setIsCheckoutOpen(false)}
-                  className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-white font-bold py-3.5 rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
+                  className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-3.5 rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                 >
-                  הבנתי, תודה!
+                  סגור והמשך לגלוש
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Review Submission Modal */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative" dir="rtl">
+            <button
+              onClick={() => setIsReviewModalOpen(false)}
+              className="absolute top-4 left-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="text-2xl font-bold text-[#3D2817] mb-4 text-center" style={{ fontFamily: 'Alef' }}>
+              הוספת ביקורת ✨
+            </h3>
+
+            {reviewMessage ? (
+              <div className="bg-emerald-50 text-emerald-800 p-4 rounded-2xl text-center font-bold my-4 border border-emerald-200">
+                {reviewMessage}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#3D2817] mb-1">שם מלא</label>
+                  <input
+                    type="text"
+                    placeholder="השם שלך..."
+                    value={newReviewName}
+                    onChange={(e) => setNewReviewName(e.target.value)}
+                    className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#3D2817] mb-1">דירוג</label>
+                  <div className="flex gap-2 justify-center py-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewReviewRating(star)}
+                        className="text-amber-400 hover:scale-110 transition-transform cursor-pointer"
+                      >
+                        <Star className={`w-8 h-8 ${star <= newReviewRating ? 'fill-current' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#3D2817] mb-1">הביקורת שלך</label>
+                  <textarea
+                    rows={3}
+                    placeholder="מה חשבת על העוגיות?..."
+                    value={newReviewText}
+                    onChange={(e) => setNewReviewText(e.target.value)}
+                    className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3]"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleAddReview}
+                  disabled={!newReviewName.trim() || !newReviewText.trim()}
+                  className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-3.5 rounded-2xl text-base shadow-md cursor-pointer"
+                >
+                  שליחת ביקורת 💌
                 </Button>
               </div>
             )}

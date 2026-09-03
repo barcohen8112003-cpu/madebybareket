@@ -1,0 +1,197 @@
+{
+  "products": [
+    {
+      "id": "16",
+      "name": "מגולגלות נוטלה",
+      "price": 35,
+      "image": "cookies/rolled_nutella.jpg",
+      "desc": "מארז מגולגלות פריכות במילוי שוקולד נוטלה עשיר ומפנק",
+      "category": "sweet",
+      "hidden": false,
+      "options": [
+        "נוטלה קלאסי",
+        "עם קינדר (תוספת 7 ₪)"
+      ],
+      "optionImages": {
+        "נוטלה קלאסי": "cookies/rolled_nutella.jpg",
+        "עם קינדר (תוספת 7 ₪)": "cookies/rolled_nutella_kinder.jpg"
+      }
+    },
+    {
+      "id": "1",
+      "name": "קורנפלקס",
+      "price": 15,
+      "image": "cookies/cornflakes.jpg",
+      "desc": "קראנץ' קורנפלקס מיוחד בתוך עוגיית שוקולד צ'יפס רכה שכולם אוהבים",
+      "category": "salty_sweet",
+      "hidden": false
+    },
+    {
+      "id": "3",
+      "name": "הרשיז",
+      "price": 16,
+      "image": "cookies/oreo.jpg",
+      "desc": "קראמבל פריך עם פירורי הרשיז ושוקולד לבן מפנק במיוחד",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "8",
+      "name": "נוטלה",
+      "price": 13,
+      "image": "cookies/nutella.png",
+      "desc": "מילוי נוטלה נוזלי ומושחת במיוחד שמתפרץ בכל ביס",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "13",
+      "name": "M&M's",
+      "price": 17,
+      "image": "cookies/m&m.jpeg",
+      "desc": "עוגיית שוקולד צבעונית ושמחה שילדים ומבוגרים אוהבים כאחד",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "15",
+      "name": "קינדר",
+      "price": 16,
+      "image": "cookies/kinder.jpg",
+      "desc": "קרם קינדר עשיר עם אצבעות שוקולד קינדר מפנקות מעל",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "4",
+      "name": "בוואנו",
+      "price": 15,
+      "image": "cookies/b1.jpeg",
+      "desc": "קרם קינדר בואנו עשיר עם שברי וופל פריכים שנמסים בפה",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "2",
+      "name": "כריות קליק",
+      "price": 16,
+      "image": "cookies/kinder.jpeg",
+      "desc": "שברי כריות נוטלה וקליק שוקולד לחוויית קראנץ' מושלמת",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "5",
+      "name": "אמסטרדם",
+      "price": 15,
+      "image": "cookies/amsterdam.png",
+      "desc": "עוגיית קקאו כהה ועשירה עם לב שוקולד לבן נימוח ונמס",
+      "category": "classic",
+      "hidden": false
+    },
+    {
+      "id": "6",
+      "name": "בייגלה מלוח",
+      "price": 16,
+      "image": "cookies/pretzel.png",
+      "desc": "שילוב מושלם של מתוק ומלוח עם שוקולד חלב איכותי ובייגלה פריך",
+      "category": "salty_sweet",
+      "hidden": false
+    },
+    {
+      "id": "7",
+      "name": "לוטוס",
+      "price": 15,
+      "image": "cookies/lotus.png",
+      "desc": "קרם לוטוס עשיר עם פירורי עוגיית לוטוס פריכה מעל",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "9",
+      "name": "במבה אדומה",
+      "price": 16,
+      "image": "cookies/red_bamba.jpeg",
+      "desc": "חוויה נוסטלגית מתוקה של במבה אדומה מתוקה ופריכה במיוחד",
+      "category": "classic",
+      "hidden": false
+    },
+    {
+      "id": "10",
+      "name": "שוקולד חלב",
+      "price": 13,
+      "image": "cookies/milk_choclat.jpeg",
+      "desc": "הקלאסיקה האהובה - שוקולד צ'יפס רכה ונימוחה עם שוקולד חלב",
+      "category": "classic",
+      "hidden": false
+    },
+    {
+      "id": "11",
+      "name": "טריקולד",
+      "price": 16,
+      "image": "cookies/trikold.jpeg",
+      "desc": "שלושה סוגי שוקולד איכותיים - לבן, חלב ומריר במאפה אחד",
+      "category": "sweet",
+      "hidden": false
+    },
+    {
+      "id": "12",
+      "name": "ספרינקלס",
+      "price": 14,
+      "image": "cookies/sprinkels.jpeg",
+      "desc": "עוגיית יום הולדת שמחה ומזמינה עם סוכריות צבעוניות מבחוץ ומבפנים",
+      "category": "classic",
+      "hidden": false
+    },
+    {
+      "id": "14",
+      "name": "חצי חצי",
+      "price": 16,
+      "image": "cookies/half_half.jpeg",
+      "desc": "חצי שוקולד מריר וחצי שוקולד לבן - הטוב משני העולמות",
+      "category": "classic",
+      "hidden": false
+    },
+    {
+      "id": "1784829005535",
+      "name": "שש",
+      "price": 20,
+      "desc": "כ",
+      "image": "data:image/png;base64,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",
+      "category": "salty_sweet",
+      "hidden": true
+    }
+  ],
+  "orders": [],
+  "analytics": {
+    "2026-07-23": {
+      "visitors": 3,
+      "pageviews": 24,
+      "referrers": {
+        "http://localhost:3000/": 8,
+        "Direct / קישור ישיר": 15,
+        "http://localhost:3000/admin/dashboard": 1
+      },
+      "funnel": {
+        "visitor": 3,
+        "add_to_cart": 1,
+        "initiate_checkout": 1,
+        "purchase": 0
+      }
+    },
+    "2026-07-25": {
+      "visitors": 6,
+      "pageviews": 33,
+      "referrers": {
+        "Direct / קישור ישיר": 16,
+        "http://localhost:3000/": 17
+      },
+      "funnel": {
+        "visitor": 6,
+        "add_to_cart": 0,
+        "initiate_checkout": 0,
+        "purchase": 0
+      }
+    }
+  }
+}

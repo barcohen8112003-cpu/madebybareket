@@ -45,9 +45,9 @@
 :root {
   /* Warm Bakery Palette */
   --primary: #E8B4A8;
-  --primary-foreground: #FFFFFF;
+  --primary-foreground: #3D2817;
   --sidebar-primary: #D89B8E;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-primary-foreground: #3D2817;
   --chart-1: #F5E6D3;
   --chart-2: #E8B4A8;
   --chart-3: #D89B8E;
@@ -65,7 +65,7 @@
   --muted: #E8D4C8;
   --muted-foreground: #6B4423;
   --accent: #E8B4A8;
-  --accent-foreground: #FFFFFF;
+  --accent-foreground: #3D2817;
   --destructive: #C85A54;
   --destructive-foreground: #FFFFFF;
   --border: #E8D4C8;
@@ -74,7 +74,7 @@
   --sidebar: #FFFBF7;
   --sidebar-foreground: #3D2817;
   --sidebar-accent: #E8B4A8;
-  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-accent-foreground: #3D2817;
   --sidebar-border: #E8D4C8;
   --sidebar-ring: #E8B4A8;
 }
