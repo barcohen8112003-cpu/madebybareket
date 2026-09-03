@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, ExternalLink } from 'lucide-react';
+import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin } from 'lucide-react';
 
 interface Cookie {
   id: string;
@@ -30,22 +30,26 @@ interface Review {
   date: string;
 }
 
+// Exactly 18 cookie flavors according to official list
 const COOKIES: Cookie[] = [
-  { id: '1', name: 'קורנפלקס', price: 15, image: '/cookies/cornflakes.jpg', allergens: ['חלב', 'גלוטן'] },
-  { id: '2', name: 'כריות קליק', price: 16, image: '/cookies/kinder.jpeg', allergens: ['חלב', 'גלוטן', 'סויה'] },
-  { id: '3', name: 'הרשיז', price: 16, image: '/cookies/oreo.jpg', allergens: ['חלב', 'גלוטן', 'סויה'] },
-  { id: '4', name: 'בוואנו', price: 15, image: '/cookies/b1.jpeg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
-  { id: '5', name: 'אמסטרדם', price: 15, image: '/cookies/amsterdam.png', allergens: ['חלב', 'גלוטן'] },
-  { id: '6', name: 'בייגלה מלוח', price: 16, image: '/cookies/pretzel.png', allergens: ['חלב', 'גלוטן', 'שומשום'] },
-  { id: '7', name: 'לוטוס', price: 15, image: '/cookies/lotus.png', allergens: ['חלב', 'גלוטן', 'סויה'] },
-  { id: '8', name: 'נוטלה', price: 13, image: '/cookies/nutella.png', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
-  { id: '9', name: 'במבה אדומה', price: 16, image: '/cookies/red_bamba.jpeg', allergens: ['בוטנים', 'גלוטן', 'חלב'] },
-  { id: '10', name: 'שוקולד חלב', price: 13, image: '/cookies/milk_choclat.jpeg', allergens: ['חלב', 'גלוטן'] },
-  { id: '11', name: 'טריקולד', price: 16, image: '/cookies/trikold.jpeg', allergens: ['חלב', 'גלוטן'] },
-  { id: '12', name: 'ספרינקלס', price: 14, image: '/cookies/sprinkels.jpeg', allergens: ['חלב', 'גלוטן'] },
-  { id: '13', name: "M&M's", price: 17, image: '/cookies/m&m.jpeg', allergens: ['חלב', 'גלוטן', 'בוטנים'] },
-  { id: '14', name: 'חצי חצי', price: 16, image: '/cookies/half_half.jpeg', allergens: ['חלב', 'גלוטן'] },
-  { id: '15', name: 'קינדר', price: 16, image: '/cookies/kinder.jpg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '1', name: 'הרשיז', price: 17, image: '/cookies/oreo.jpg', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '2', name: 'אמסטרדם', price: 15, image: '/cookies/amsterdam.png', allergens: ['חלב', 'גלוטן'] },
+  { id: '3', name: 'ספרינקלס', price: 15, image: '/cookies/sprinkels.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '4', name: 'טריקולד', price: 18, image: '/cookies/trikold.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '5', name: 'M&M', price: 20, image: '/cookies/m&m.jpeg', allergens: ['חלב', 'גלוטן', 'בוטנים'] },
+  { id: '6', name: 'קינדר', price: 17, image: '/cookies/kinder.jpg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '7', name: 'נוטלה', price: 16, image: '/cookies/nutella.png', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '8', name: 'קורנפלקס', price: 16, image: '/cookies/cornflakes.jpg', allergens: ['חלב', 'גלוטן'] },
+  { id: '9', name: 'במבה אדומה ושוקולד לבן', price: 18, image: '/cookies/red_bamba.jpeg', allergens: ['בוטנים', 'גלוטן', 'חלב'] },
+  { id: '10', name: 'בואנו', price: 16, image: '/cookies/bueno.jpg', allergens: ['חלב', 'גלוטן', 'אגוזים'] },
+  { id: '11', name: 'מושחתת חומה', price: 15, image: '/cookies/placeholder.png', allergens: ['חלב', 'גלוטן'] },
+  { id: '12', name: 'בייגלה מלוח', price: 17, image: '/cookies/pretzel.png', allergens: ['חלב', 'גלוטן', 'שומשום'] },
+  { id: '13', name: 'חצי חצי', price: 20, image: '/cookies/half_half.jpeg', allergens: ['חלב', 'גלוטן'] },
+  { id: '14', name: 'לוטוס', price: 17, image: '/cookies/lotus.png', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '15', name: "Reese’s", price: 20, image: '/cookies/placeholder.png', allergens: ['בוטנים', 'חלב', 'גלוטן', 'סויה'] },
+  { id: '16', name: 'כריות', price: 16, image: '/cookies/kinder.jpeg', allergens: ['חלב', 'גלוטן', 'סויה'] },
+  { id: '17', name: 'מושחתת לבנה', price: 15, image: '/cookies/placeholder.png', allergens: ['חלב', 'גלוטן'] },
+  { id: '18', name: 'סמורס', price: 16, image: '/cookies/placeholder.png', allergens: ['חלב', 'גלוטן'] },
 ];
 
 interface BoxConfig {
@@ -66,7 +70,6 @@ const BOXES: BoxConfig[] = [
 ];
 
 export default function Home() {
-  // Cart state persisted in localStorage
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const savedCart = localStorage.getItem('bareket_cart');
@@ -105,9 +108,9 @@ export default function Home() {
   const [editingBoxInstanceId, setEditingBoxInstanceId] = useState<string | null>(null);
   const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
 
-  // Reviews state (curated static list, no fake live localStorage persistence)
+  // Reviews state
   const reviews: Review[] = [
-    { id: 'r1', name: 'שירה ד.', text: 'העוגיות הכי טעימות בארץ בפער! הכריות קליק פשוט מושלם והגיע חם ונימוח.', rating: 5, date: '12/07/2026' },
+    { id: 'r1', name: 'שירה ד.', text: 'העוגיות הכי טעימות בארץ בפער! הכריות פשוט מושלם והגיע חם ונימוח.', rating: 5, date: '12/07/2026' },
     { id: 'r2', name: 'גיא ל.', text: 'מזמין כל שבוע מחדש! השירות מדהים והעוגיות ממכרות בטירוף, במיוחד הקורנפלקס.', rating: 5, date: '10/07/2026' },
     { id: 'r3', name: 'מעיין א.', text: 'מארז מושלם לאירוחים או סתם כשמתחשק משהו מתוק ואיכותי. ממליצה בחום!', rating: 5, date: '05/07/2026' }
   ];
@@ -357,7 +360,6 @@ export default function Home() {
 
     if (!isFormValid) return;
 
-    // Create unique order ID
     const orderRef = `MB-${Math.floor(100000 + Math.random() * 900000)}`;
     setCurrentOrderId(orderRef);
 
@@ -370,7 +372,6 @@ export default function Home() {
       }
     }).join('\n');
 
-    // Notify backend
     try {
       await fetch('/api/orders', {
         method: 'POST',
@@ -390,12 +391,10 @@ export default function Home() {
       console.error("Order API request error:", err);
     }
 
-    // Advance to Step 2 (Payment confirmation view)
     setCheckoutStep(2);
   };
 
   const handleConfirmPayment = () => {
-    // Clear cart ONLY after user explicitly confirms Bit payment
     setCart([]);
     try {
       localStorage.removeItem('bareket_cart');
@@ -423,17 +422,17 @@ export default function Home() {
   };
 
   const renderPickupDetails = () => (
-    <div className="bg-[#FFF8F3] border-2 border-[#E8D4C8] rounded-2xl p-4 my-4 text-right space-y-2" dir="rtl">
-      <div className="flex items-center gap-2 font-bold text-[#3D2817] text-base">
-        <MapPin className="w-5 h-5 text-[#E8B4A8]" />
-        <span>פרטי איסוף עצמי:</span>
+    <div className="bg-[#FFF8F3] border-2 border-[#E8B4A8] rounded-2xl p-4 my-4 text-right space-y-2.5 shadow-sm" dir="rtl">
+      <div className="flex items-center gap-2 font-black text-[#3D2817] text-base sm:text-lg bg-[#E8B4A8]/30 px-3 py-1.5 rounded-xl w-fit">
+        <MapPin className="w-5 h-5 text-[#C85A54]" />
+        <span className="text-[#C85A54] font-extrabold">📍 איסוף עצמי מחיפה בלבד!</span>
       </div>
       <p className="text-sm text-[#6B4423]">
         <strong>מדיניות הזמנות:</strong> הזמנות בימים א'–ד', קבלת העוגיות בסוף השבוע (חמישי-שישי/שבת).
       </p>
       <p className="text-xs text-[#6B4423] opacity-90">
-        📍 כתובת ומיקום מדויק בתיאום מראש במספר 0512909911 / WhatsApp
-        {/* TODO: Replace with exact street address when provided */}
+        📍 כתובת ומיקום מדויק בחיפה בתיאום מראש במספר 0512909911 / WhatsApp
+        {/* TODO: Replace with exact street address in Haifa when provided */}
       </p>
       <div className="flex flex-wrap gap-2 pt-2">
         <a
@@ -442,10 +441,10 @@ export default function Home() {
           rel="noopener noreferrer"
           className="bg-[#33CCFF] hover:bg-[#28B8EB] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
         >
-          🚗 Waze
+          🚗 Waze חיפה
         </a>
         <a
-          href="https://www.google.com/maps/search/?api=1&query=made+by+bareket"
+          href="https://www.google.com/maps/search/?api=1&query=made+by+bareket+Haifa"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all flex items-center gap-1 shadow-xs"
@@ -514,8 +513,6 @@ export default function Home() {
               <div className="max-w-md mx-auto">
                 {renderPickupDetails()}
               </div>
-
-              <div className="h-1 w-24 bg-gradient-to-l from-[#E8B4A8] to-[#D89B8E] mx-auto rounded-full mt-4"></div>
             </div>
           </section>
 
@@ -526,7 +523,7 @@ export default function Home() {
                 מארזים מפנקים במחיר מיוחד 🎁
               </h2>
               <p className="text-center text-[#6B4423] mb-8">
-                הרכיבו מארז מושלם מהעוגיות האהובות עליכם
+                הרכיבו מארז מושלם מ-18 העוגיות המפנקות שלנו
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto" dir="rtl">
                 {BOXES.map((box) => (
@@ -552,17 +549,17 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Individual Cookies Catalog Section */}
+          {/* Individual Cookies Catalog Section (Exactly 18 cookies) */}
           <section className="py-10 px-4 bg-[#FFF8F3] border-t border-b border-[#E8D4C8]" ref={cookiesSectionRef}>
             <div className="max-w-6xl mx-auto" dir="rtl">
               <h2 className="text-3xl font-bold text-[#3D2817] text-center mb-2" style={{ fontFamily: 'Alef' }}>
-                עוגיות בודדות 🍪
+                עוגיות בודדות 🍪 (18 טעמים)
               </h2>
               <p className="text-center text-[#6B4423] mb-8">
-                רוצים להוסיף עוגייה בודדת לסל? בחרו מהמגוון העשיר שלנו (כולל סימון אלרגנים)
+                בחרו עוגיות בודדות או שלבו אותן במארזים האישיים שלכם
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {COOKIES.map((cookie) => {
                   const cartSingleItem = cart.find(item => item.type === 'single' && item.id === cookie.id);
                   const qtyInCart = cartSingleItem ? cartSingleItem.quantity : 0;
@@ -573,12 +570,17 @@ export default function Home() {
                       className="bg-white border-2 border-[#E8D4C8] hover:border-[#E8B4A8] rounded-2xl p-4 flex flex-col justify-between items-center text-center transition-all shadow-xs hover:shadow-md"
                     >
                       <div className="w-full flex flex-col items-center">
-                        <img
-                          src={cookie.image}
-                          alt={cookie.name}
-                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover shadow-sm border border-[#E8D4C8] mb-3"
-                        />
-                        <h3 className="font-bold text-[#3D2817] text-base">{cookie.name}</h3>
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden shadow-sm border border-[#E8D4C8] mb-3 flex items-center justify-center bg-[#FFF8F3]">
+                          <img
+                            src={cookie.image}
+                            alt={cookie.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/logo.png';
+                            }}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <h3 className="font-bold text-[#3D2817] text-sm sm:text-base leading-tight">{cookie.name}</h3>
                         <p className="text-sm font-extrabold text-[#E8B4A8] mt-1">{cookie.price} ₪</p>
                         {renderAllergenBadges(cookie.allergens)}
                       </div>
@@ -606,7 +608,7 @@ export default function Home() {
                           <button
                             type="button"
                             onClick={() => handleAddCookie(cookie)}
-                            className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-2 rounded-xl text-sm transition-all shadow-sm active:scale-95 cursor-pointer"
+                            className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-2 rounded-xl text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer"
                           >
                             הוסף לסל +
                           </button>
@@ -669,7 +671,7 @@ export default function Home() {
                 {editingBoxInstanceId ? 'עריכת הרכב מארז' : `הרכבת מארז של ${boxSize} עוגיות`}
               </h2>
               <p className="text-sm text-[#6B4423] mt-1.5">
-                בחרו בדיוק {boxSize} עוגיות לפי הטעם שלכם
+                בחרו בדיוק {boxSize} עוגיות מתוך 18 הטעמים שלנו
               </p>
             </div>
             
@@ -728,7 +730,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Cookies Configurator Grid */}
+          {/* Cookies Configurator Grid (All 18 cookies) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-24">
             {COOKIES.map((cookie) => {
               const count = boxFlavors[cookie.id] || 0;
@@ -742,11 +744,16 @@ export default function Home() {
                   }`}
                 >
                   <div className="w-full flex flex-col items-center">
-                    <img
-                      src={cookie.image}
-                      alt={cookie.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm border border-[#E8D4C8] mb-2"
-                    />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-sm border border-[#E8D4C8] mb-2 flex items-center justify-center bg-[#FFF8F3]">
+                      <img
+                        src={cookie.image}
+                        alt={cookie.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/logo.png';
+                        }}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <h3 className="font-bold text-[#3D2817] text-base mb-1 line-clamp-1">{cookie.name}</h3>
                     {renderAllergenBadges(cookie.allergens)}
                   </div>
@@ -1063,7 +1070,7 @@ export default function Home() {
                   {/* Pick-up Day Selector */}
                   <div>
                     <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      יום איסוף (בסוף השבוע) <span className="text-red-500 font-bold">*</span>
+                      יום איסוף (בסוף השבוע בחיפה) <span className="text-red-500 font-bold">*</span>
                     </label>
                     <select
                       value={pickupDay}
@@ -1131,7 +1138,7 @@ export default function Home() {
                     </label>
                   </div>
 
-                  {/* Self-Pickup Checkbox (Aligned without 7 business days) */}
+                  {/* Self-Pickup Checkbox (Prominently mentions Haifa) */}
                   <div className="bg-[#FFFBF7] p-2.5 rounded-xl border border-gray-100">
                     <label className="flex gap-2.5 items-start cursor-pointer text-xs sm:text-sm text-[#6B4423]">
                       <input
@@ -1141,7 +1148,7 @@ export default function Home() {
                         className="mt-1 w-4 h-4 rounded border-2 border-[#E8D4C8] text-[#E8B4A8] focus:ring-[#E8B4A8] accent-[#E8B4A8] cursor-pointer"
                       />
                       <span className="mr-2">
-                        <span className="text-red-500 font-bold">*</span> אני מאשר/ת שההזמנה היא לאיסוף עצמי בסוף השבוע (הזמנות בימים א'–ד').
+                        <span className="text-red-500 font-bold">*</span> אני מאשר/ת שההזמנה היא לאיסוף עצמי מחיפה בלבד בסוף השבוע (הזמנות בימים א'–ד').
                       </span>
                     </label>
                   </div>
@@ -1186,7 +1193,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* Step 2: Clear & Explicit Payment Step with Order Number */}
+            {/* Step 2: Payment Step */}
             {checkoutStep === 2 && (
               <div className="text-right space-y-6" dir="rtl">
                 <div className="text-center mb-2">
@@ -1266,11 +1273,14 @@ export default function Home() {
                 </div>
 
                 <div className="bg-[#FFF8F3] border-2 border-dashed border-[#E8D4C8] rounded-2xl p-5 space-y-3 text-right">
+                  <p className="text-sm font-bold text-[#C85A54]">
+                    📍 איסוף עצמי מחיפה בלבד!
+                  </p>
                   <p className="text-sm text-[#6B4423]">
-                    <strong>איסוף עצמי:</strong> נקבע ליום <strong>{pickupDay}</strong> בטווח <strong>{pickupTimeSlot}</strong>.
+                    <strong>מועד איסוף:</strong> נקבע ליום <strong>{pickupDay}</strong> בטווח <strong>{pickupTimeSlot}</strong>.
                   </p>
                   <p className="text-xs text-[#6B4423] opacity-90">
-                    איסוף בתיאום מראש במספר 0512909911 / WhatsApp.
+                    איסוף בתיאום מראש בחיפה במספר 0512909911 / WhatsApp.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
                     <a
