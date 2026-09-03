@@ -12,12 +12,12 @@ interface Cookie {
 
 interface CartItem {
   instanceId: string;
-  type: 'box';
+  type: 'box' | 'single';
   id: string;
   name: string;
   price: number;
   image?: string;
-  flavors: { cookie: Cookie; quantity: number }[];
+  flavors?: { cookie: Cookie; quantity: number }[];
   quantity: number;
 }
 
@@ -29,7 +29,7 @@ interface Review {
   date: string;
 }
 
-// 18 official cookie flavors for random mystery selection
+// 18 official cookie flavors
 const COOKIES: Cookie[] = [
   { id: '1', name: 'הרשיז', price: 17, image: '/cookies/oreo.jpg', allergens: ['חלב', 'גלוטן', 'סויה'] },
   { id: '2', name: 'אמסטרדם', price: 15, image: '/cookies/amsterdam.png', allergens: ['חלב', 'גלוטן'] },
@@ -60,26 +60,19 @@ interface MysteryBoxConfig {
 }
 
 const MYSTERY_BOXES: MysteryBoxConfig[] = [
-  { size: 2, name: 'מארז 2 עוגיות מיסטרי', price: 38, emoji: '🎁', description: '2 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
-  { size: 4, name: 'מארז 4 עוגיות מיסטרי', price: 70, emoji: '🎁', description: '4 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
-  { size: 5, name: 'מארז 5 עוגיות מיסטרי', price: 83, emoji: '🎁', description: '5 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
-  { size: 6, name: 'מארז 6 עוגיות מיסטרי', price: 95, emoji: '🎲', description: '6 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
-  { size: 8, name: 'מארז 8 עוגיות מיסטרי', price: 125, emoji: '✨', description: '8 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
-  { size: 10, name: 'מארז 10 עוגיות מיסטרי', price: 150, emoji: '🎉', description: '10 עוגיות בטעמים אקראיים ומפתיעים מהאפייה של ברקת' },
+  { size: 2, name: 'מארז 2 עוגיות מיסטרי', price: 38, emoji: '🎁', description: '2 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
+  { size: 4, name: 'מארז 4 עוגיות מיסטרי', price: 70, emoji: '🎁', description: '4 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
+  { size: 5, name: 'מארז 5 עוגיות מיסטרי', price: 83, emoji: '🎁', description: '5 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
+  { size: 6, name: 'מארז 6 עוגיות מיסטרי', price: 95, emoji: '🎲', description: '6 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
+  { size: 8, name: 'מארז 8 עוגיות מיסטרי', price: 125, emoji: '✨', description: '8 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
+  { size: 10, name: 'מארז 10 עוגיות מיסטרי', price: 150, emoji: '🎉', description: '10 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
 ];
 
-// Helper to generate random cookie flavors for a mystery box
-const generateRandomFlavors = (size: number): { cookie: Cookie; quantity: number }[] => {
-  const selectedMap: Record<string, number> = {};
-  for (let i = 0; i < size; i++) {
-    const randomIndex = Math.floor(Math.random() * COOKIES.length);
-    const cookieId = COOKIES[randomIndex].id;
-    selectedMap[cookieId] = (selectedMap[cookieId] || 0) + 1;
-  }
-  return Object.entries(selectedMap).map(([cookieId, qty]) => {
-    const cookie = COOKIES.find(c => c.id === cookieId)!;
-    return { cookie, quantity: qty };
-  });
+// Helper to generate UNIQUE random cookie flavors for a mystery box (no duplicate cookies!)
+const generateUniqueRandomFlavors = (size: number): { cookie: Cookie; quantity: number }[] => {
+  const shuffled = [...COOKIES].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, Math.min(size, COOKIES.length));
+  return selected.map(cookie => ({ cookie, quantity: 1 }));
 };
 
 export default function Home() {
@@ -123,9 +116,9 @@ export default function Home() {
 
   // Reviews state
   const reviews: Review[] = [
-    { id: 'r1', name: 'שירה ד.', text: 'מארז המיסטרי פשוט מטורף! כל עוגייה הייתה הפתעה מתוקה וטעימה ברמות.', rating: 5, date: '12/07/2026' },
-    { id: 'r2', name: 'גיא ל.', text: 'הזמנתי מארז 8 מיסטרי — הכל הגיע חם, טרי ונימוח. איסוף מתוק תקתק בחיפה!', rating: 5, date: '10/07/2026' },
-    { id: 'r3', name: 'מעיין א.', text: 'רעיון מושלם של מארז אקראי. העוגיות באיכות הכי גבוהה שיש!', rating: 5, date: '05/07/2026' }
+    { id: 'r1', name: 'שירה ד.', text: 'מארז המיסטרי פשוט מטורף! כל עוגייה במארז הייתה טעם שונה לחלוטין וטעים ברמות.', rating: 5, date: '12/07/2026' },
+    { id: 'r2', name: 'גיא ל.', text: 'הזמנתי מארז 8 מיסטרי — קיבלתי 8 עוגיות שונות ושום טעם לא חזר על עצמו! איסוף תקתק בחיפה.', rating: 5, date: '10/07/2026' },
+    { id: 'r3', name: 'מעיין א.', text: 'העוגיות של ברקת באיכות הכי גבוהה שיש. 18 טעמים מדהימים!', rating: 5, date: '05/07/2026' }
   ];
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [newReviewName, setNewReviewName] = useState('');
@@ -133,10 +126,12 @@ export default function Home() {
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [reviewMessage, setReviewMessage] = useState('');
 
+  const cookiesSectionRef = useRef<HTMLDivElement>(null);
+
   const handleOpenMysteryBoxModal = (box: MysteryBoxConfig) => {
     setActiveMysteryBox({
       config: box,
-      flavors: generateRandomFlavors(box.size)
+      flavors: generateUniqueRandomFlavors(box.size)
     });
   };
 
@@ -144,7 +139,7 @@ export default function Home() {
     if (!activeMysteryBox) return;
     setActiveMysteryBox({
       ...activeMysteryBox,
-      flavors: generateRandomFlavors(activeMysteryBox.config.size)
+      flavors: generateUniqueRandomFlavors(activeMysteryBox.config.size)
     });
   };
 
@@ -168,7 +163,7 @@ export default function Home() {
   };
 
   const handleQuickAddMysteryBox = (box: MysteryBoxConfig) => {
-    const flavors = generateRandomFlavors(box.size);
+    const flavors = generateUniqueRandomFlavors(box.size);
     setCart(prev => [
       ...prev,
       {
@@ -182,6 +177,35 @@ export default function Home() {
         quantity: 1
       }
     ]);
+  };
+
+  const handleAddSingleCookie = (cookie: Cookie) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.type === 'single' && item.id === cookie.id);
+      if (existing) {
+        return prev.map(item => item.type === 'single' && item.id === cookie.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, {
+        instanceId: `single-${cookie.id}-${Date.now()}-${Math.random()}`,
+        type: 'single',
+        id: cookie.id,
+        name: cookie.name,
+        price: cookie.price,
+        image: cookie.image,
+        quantity: 1
+      }];
+    });
+  };
+
+  const handleRemoveOneSingleCookie = (cookieId: string) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.type === 'single' && item.id === cookieId);
+      if (!existing) return prev;
+      if (existing.quantity > 1) {
+        return prev.map(item => item.type === 'single' && item.id === cookieId ? { ...item, quantity: item.quantity - 1 } : item);
+      }
+      return prev.filter(item => !(item.type === 'single' && item.id === cookieId));
+    });
   };
 
   const handleUpdateQuantity = (instanceId: string, delta: number) => {
@@ -235,6 +259,7 @@ export default function Home() {
 
   const getTotalCookieCount = () => {
     return cart.reduce((sum, item) => {
+      if (item.type === 'single') return sum + item.quantity;
       const boxSizeNum = parseInt(item.id.replace('box-', '')) || 0;
       return sum + (boxSizeNum * item.quantity);
     }, 0);
@@ -242,8 +267,12 @@ export default function Home() {
 
   const getOrderSummaryText = () => {
     const summaryParts = cart.map(item => {
-      const flavorDesc = item.flavors.map(f => `${f.cookie.name} (${f.quantity})`).join(', ');
-      return `${item.quantity} x ${item.name} [${flavorDesc}]`;
+      if (item.type === 'single') {
+        return `${item.quantity} x ${item.name}`;
+      } else {
+        const flavorDesc = item.flavors?.map(f => `${f.cookie.name} (${f.quantity})`).join(', ') || '';
+        return `${item.quantity} x ${item.name} [${flavorDesc}]`;
+      }
     });
     if (hasBirthdaySign) {
       summaryParts.push("שלט מזל טוב (+5 ₪)");
@@ -275,8 +304,12 @@ export default function Home() {
     setCurrentOrderId(orderRef);
 
     const orderSummaryText = cart.map(item => {
-      const flavorsStr = item.flavors.map(f => `${f.cookie.name} (${f.quantity})`).join(', ');
-      return `${item.quantity} x ${item.name} (${flavorsStr})`;
+      if (item.type === 'single') {
+        return `${item.quantity} x ${item.name}`;
+      } else {
+        const flavorsStr = item.flavors?.map(f => `${f.cookie.name} (${f.quantity})`).join(', ') || '';
+        return `${item.quantity} x ${item.name} (${flavorsStr})`;
+      }
     }).join('\n');
 
     try {
@@ -307,6 +340,25 @@ export default function Home() {
       localStorage.removeItem('bareket_cart');
     } catch {}
     setCheckoutStep('success');
+  };
+
+  const renderAllergenBadges = (allergens?: string[]) => {
+    if (!allergens || allergens.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1 justify-center my-1.5">
+        {allergens.map(allergen => (
+          <span key={allergen} className="text-[10px] bg-[#FFF8F3] text-[#6B4423] border border-[#E8D4C8] px-1.5 py-0.5 rounded-full font-medium">
+            {allergen === 'חלב' && '🥛 '}
+            {allergen === 'גלוטן' && '🌾 '}
+            {allergen === 'בוטנים' && '🥜 '}
+            {allergen === 'אגוזים' && '🌰 '}
+            {allergen === 'סויה' && '🌱 '}
+            {allergen === 'שומשום' && '🌾 '}
+            {allergen}
+          </span>
+        ))}
+      </div>
+    );
   };
 
   const renderPickupDetails = () => (
@@ -403,7 +455,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Mystery Box Main Section */}
+        {/* Mystery Box Section */}
         <section className="py-6 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-8">
@@ -415,7 +467,7 @@ export default function Home() {
                 מארזי מיסטרי - Mystery Box 🎁
               </h2>
               <p className="text-base text-[#6B4423] max-w-xl mx-auto mt-2">
-                האתר בוחר עבורכם אקראית את העוגיות הכי מושחתות וטריות מהאפייה של ברקת! בחרו גודל מארז וגלו את ההפתעות המתוקות 🎲✨
+                האתר בוחר עבורכם אקראית טעמים ייחודיים (ללא כפילויות בכל מארז!) מתוך 18 עוגיות השחיתות של ברקת 🎲✨
               </p>
             </div>
 
@@ -427,7 +479,7 @@ export default function Home() {
                 >
                   <div className="absolute top-3 left-3 bg-[#FFF8F3] text-[#E8B4A8] border border-[#E8D4C8] text-xs font-black px-2.5 py-1 rounded-full flex items-center gap-1">
                     <Shuffle className="w-3 h-3" />
-                    <span>טעמים אקראיים</span>
+                    <span>טעמים שונים (ללא כפילות)</span>
                   </div>
 
                   <div className="mb-6 pt-2">
@@ -442,7 +494,7 @@ export default function Home() {
                       onClick={() => handleOpenMysteryBoxModal(box)}
                       className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-3 rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer text-base flex items-center justify-center gap-2"
                     >
-                      <span>חטיף הצצה להפתעה 🎲</span>
+                      <span>הצצה לטעמים האקראיים 🎲</span>
                     </Button>
                     <button
                       onClick={() => handleQuickAddMysteryBox(box)}
@@ -453,6 +505,80 @@ export default function Home() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Full 18 Cookies Showcase Catalog Section */}
+        <section className="py-12 px-4 bg-[#FFF8F3] border-t border-b border-[#E8D4C8]" ref={cookiesSectionRef}>
+          <div className="max-w-6xl mx-auto" dir="rtl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-[#3D2817]" style={{ fontFamily: 'Alef' }}>
+                כל העוגיות שלנו 🍪 (18 טעמים)
+              </h2>
+              <p className="text-base text-[#6B4423] mt-2">
+                הכירו את כל 18 טעמי השחיתות של ברקת הנאפים טריים מדי שבוע
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {COOKIES.map((cookie) => {
+                const cartSingleItem = cart.find(item => item.type === 'single' && item.id === cookie.id);
+                const qtyInCart = cartSingleItem ? cartSingleItem.quantity : 0;
+
+                return (
+                  <div
+                    key={cookie.id}
+                    className="bg-white border-2 border-[#E8D4C8] hover:border-[#E8B4A8] rounded-2xl p-4 flex flex-col justify-between items-center text-center transition-all shadow-xs hover:shadow-md group"
+                  >
+                    <div className="w-full flex flex-col items-center">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden shadow-sm border border-[#E8D4C8] mb-3 flex items-center justify-center bg-[#FFF8F3]">
+                        <img
+                          src={cookie.image}
+                          alt={cookie.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/logo.png';
+                          }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <h3 className="font-bold text-[#3D2817] text-sm sm:text-base leading-tight">{cookie.name}</h3>
+                      <p className="text-sm font-extrabold text-[#C85A54] mt-1">{cookie.price} ₪</p>
+                      {renderAllergenBadges(cookie.allergens)}
+                    </div>
+
+                    <div className="w-full mt-3">
+                      {qtyInCart > 0 ? (
+                        <div className="flex items-center justify-between bg-[#F5E6D3] rounded-xl p-1 w-full border border-[#E8D4C8]">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOneSingleCookie(cookie.id)}
+                            className="w-8 h-8 flex items-center justify-center text-[#E8B4A8] hover:bg-white rounded-lg font-bold cursor-pointer transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="font-bold text-base text-[#3D2817]">{qtyInCart}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddSingleCookie(cookie)}
+                            className="w-8 h-8 flex items-center justify-center text-[#E8B4A8] hover:bg-white rounded-lg font-bold cursor-pointer transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddSingleCookie(cookie)}
+                          className="w-full bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] font-bold py-2 rounded-xl text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer"
+                        >
+                          הוסף לסל +
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -515,17 +641,17 @@ export default function Home() {
                 {activeMysteryBox.config.name}
               </h3>
               <p className="text-sm text-[#6B4423] mt-1">
-                האתר בחר עבורך את העוגיות האלו באופן אקראי:
+                האתר הציב עבורך {activeMysteryBox.config.size} טעמים אקראיים וייחודיים (שום טעם לא חוזר על עצמו!):
               </p>
               <p className="text-2xl font-extrabold text-[#C85A54] mt-2">
                 {activeMysteryBox.config.price} ₪
               </p>
             </div>
 
-            {/* Randomly Selected Flavors Display */}
+            {/* Randomly Selected Unique Flavors Display */}
             <div className="bg-[#FFF8F3] border-2 border-[#E8D4C8] rounded-2xl p-4 mb-6 space-y-3">
               <div className="flex justify-between items-center border-b border-[#E8D4C8] pb-2">
-                <span className="font-bold text-sm text-[#3D2817]">הטעמים במארז המיסטרי:</span>
+                <span className="font-bold text-sm text-[#3D2817]">הטעמים הייחודיים במארז:</span>
                 <button
                   type="button"
                   onClick={handleRerollMysteryFlavors}
@@ -549,7 +675,7 @@ export default function Home() {
                     />
                     <div className="text-right">
                       <p className="font-bold text-xs text-[#3D2817]">{item.cookie.name}</p>
-                      <p className="text-[11px] text-[#6B4423] font-bold">כמות: {item.quantity}</p>
+                      <p className="text-[11px] text-[#6B4423] font-bold">1 עוגייה (טעם ייחודי)</p>
                     </div>
                   </div>
                 ))}
@@ -582,7 +708,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4" dir="rtl">
               <div className="flex-1 w-full md:w-auto text-right">
                 <p className="font-semibold text-[#3D2817] text-sm sm:text-base mb-2">
-                  בסל הקניות שלך: <span className="text-[#E8B4A8] font-bold">{getTotalCookieCount()} עוגיות (מיסטרי)</span> 
+                  בסל הקניות שלך: <span className="text-[#E8B4A8] font-bold">{getTotalCookieCount()} עוגיות</span> 
                   <span className="text-gray-300 mx-2">|</span>
                   סה"כ לתשלום: <span className="text-[#E8B4A8] font-bold">{getTotalPrice()} ₪</span>
                 </p>
@@ -664,7 +790,7 @@ export default function Home() {
                       <div className="text-xs text-[#6B4423] bg-white p-2.5 rounded-xl border border-[#E8D4C8] my-2 space-y-1">
                         <p className="font-bold text-[#3D2817] mb-1">טעמים אקראיים שנבחרו במארז:</p>
                         {item.flavors.map(f => (
-                          <p key={f.cookie.id}>• {f.cookie.name} x{f.quantity}</p>
+                          <p key={f.cookie.id}>• {f.cookie.name} ({f.quantity})</p>
                         ))}
                       </div>
                     )}
@@ -863,7 +989,7 @@ export default function Home() {
                     </label>
                   </div>
 
-                  {/* Self-Pickup Checkbox (Prominently mentions Haifa) */}
+                  {/* Self-Pickup Checkbox */}
                   <div className="bg-[#FFFBF7] p-2.5 rounded-xl border border-gray-100">
                     <label className="flex gap-2.5 items-start cursor-pointer text-xs sm:text-sm text-[#6B4423]">
                       <input
@@ -947,7 +1073,7 @@ export default function Home() {
                   </a>
 
                   <a
-                    href={`https://wa.me/972549232429?text=${encodeURIComponent(`היי! ביצעתי העברת Bit עבור הזמנת מיסטרי #${currentOrderId} על שם ${fullName} בסך ${getTotalPrice()} ₪ 🍪`)}`}
+                    href={`https://wa.me/972549232429?text=${encodeURIComponent(`היי! ביצעתי העברת Bit עבור הזמנה #${currentOrderId} על שם ${fullName} בסך ${getTotalPrice()} ₪ 🍪`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold py-3.5 px-6 rounded-2xl text-center flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all text-base cursor-pointer"
@@ -993,7 +1119,7 @@ export default function Home() {
                     העוגיות כבר בתנור! ✨
                   </h3>
                   <p className="text-base text-[#3D2817] font-semibold leading-relaxed">
-                    תודה רבה {fullName}! קיבלנו את הזמנת המיסטרי ואנחנו מתחילים לאפות באהבה!
+                    תודה רבה {fullName}! קיבלנו את ההזמנה ואנחנו מתחילים לאפות באהבה!
                   </p>
                 </div>
 
@@ -1083,7 +1209,7 @@ export default function Home() {
                   <label className="block text-sm font-semibold text-[#3D2817] mb-1">הביקורת שלך</label>
                   <textarea
                     rows={3}
-                    placeholder="מה חשבת על מארזי המיסטרי?..."
+                    placeholder="מה חשבת על העוגיות ומארזי המיסטרי?..."
                     value={newReviewText}
                     onChange={(e) => setNewReviewText(e.target.value)}
                     className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3]"
