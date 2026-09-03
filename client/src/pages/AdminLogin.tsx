@@ -19,7 +19,7 @@ export default function AdminLogin() {
           'Authorization': `Bearer ${token}`
         }
       })
-      .then(res => {
+      .then(async res => {
         if (res.ok) {
           setLocation('/admin/dashboard');
         }
@@ -45,10 +45,16 @@ export default function AdminLogin() {
         body: JSON.stringify({ username, password })
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("תגובת השרת אינה תקינה. נא לוודא שהשרת רץ.");
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "חיבור נכשל");
+        throw new Error(data.error || "חיבור נכשל - נא לבדוק את הסיסמה");
       }
 
       localStorage.setItem('admin_token', data.token);

@@ -1,9 +1,10 @@
 import express from "express";
 import { createServer } from "http";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { generateToken, authenticateJWT, checkAdminPassword, AuthenticatedRequest } from "./auth.js";
-import { readDb, writeDb, getOrCreateTodayAnalytics, getTodayStr, Order } from "./db.js";
+import { readDb, writeDb, getOrCreateTodayAnalytics, Order } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,14 +14,6 @@ async function startServer() {
   const server = createServer(app);
 
   app.use(express.json());
-
-  // Serve static files from dist/public in production
-  const staticPath =
-    process.env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
-
-  app.use(express.static(staticPath));
 
   // SEO endpoints
   app.get("/robots.txt", (_req, res) => {
@@ -43,12 +36,17 @@ async function startServer() {
 
   // Admin Auth APIs
   app.post("/api/auth/login", (req, res) => {
-    const { username, password } = req.body;
-    if (checkAdminPassword(password)) {
-      const token = generateToken({ username, role: "admin" });
-      return res.status(200).json({ success: true, token });
+    try {
+      const { username, password } = req.body || {};
+      if (checkAdminPassword(password)) {
+        const token = generateToken({ username: username || "admin", role: "admin" });
+        return res.status(200).json({ success: true, token });
+      }
+      return res.status(401).json({ error: "שם משתמש או סיסמה שגויים" });
+    } catch (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ error: "שגיאת שרת פנימית" });
     }
-    return res.status(401).json({ error: "שם משתמש או סיסמה שגויים" });
   });
 
   app.get("/api/auth/me", authenticateJWT, (req: AuthenticatedRequest, res) => {
@@ -58,7 +56,7 @@ async function startServer() {
   // Order Submission API
   app.post("/api/orders", async (req, res) => {
     try {
-      const { orderId, fullName, phoneNumber, pickupDay, pickupTimeSlot, birthdaySign, orderSummaryText, totalPrice, items } = req.body;
+      const { orderId, fullName, phoneNumber, pickupDay, pickupTimeSlot, birthdaySign, orderSummaryText, totalPrice, items } = req.body || {};
 
       const orderRef = orderId || `MB-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -151,7 +149,7 @@ async function startServer() {
     try {
       const db = readDb();
       const todayAnalytics = getOrCreateTodayAnalytics(db);
-      const { type, referrer } = req.body;
+      const { type, referrer } = req.body || {};
 
       if (type === 'pageview') {
         todayAnalytics.pageviews += 1;
@@ -176,10 +174,43 @@ async function startServer() {
     }
   });
 
-  // Handle client-side routing - serve index.html for all routes
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
-  });
+  // Static files or Vite integration
+  const staticPath =
+    process.env.NODE_ENV === "production"
+      ? path.resolve(__dirname, "public")
+      : path.resolve(__dirname, "..", "dist", "public");
+
+  if (process.env.NODE_ENV !== "production" && fs.existsSync(path.resolve(__dirname, "..", "client"))) {
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "custom",
+        root: path.resolve(__dirname, "..", "client"),
+      });
+      app.use(vite.middlewares);
+      app.use("*", async (req, res, next) => {
+        if (req.originalUrl.startsWith("/api")) return next();
+        try {
+          const template = fs.readFileSync(path.resolve(__dirname, "..", "client", "index.html"), "utf-8");
+          const html = await vite.transformIndexHtml(req.originalUrl, template);
+          res.status(200).set({ "Content-Type": "text/html" }).end(html);
+        } catch (e) {
+          next(e);
+        }
+      });
+    } catch {
+      app.use(express.static(staticPath));
+      app.get("*", (_req, res) => {
+        res.sendFile(path.join(staticPath, "index.html"));
+      });
+    }
+  } else {
+    app.use(express.static(staticPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(staticPath, "index.html"));
+    });
+  }
 
   const port = process.env.PORT || 3000;
 

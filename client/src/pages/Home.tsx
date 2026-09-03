@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, Shuffle, Sparkles } from 'lucide-react';
+import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, Shuffle, Sparkles, Shield } from 'lucide-react';
 
 interface Cookie {
   id: string;
@@ -374,7 +374,7 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFBF7] via-[#FFF8F3] to-[#F5E6D3]">
+    <div className="min-h-screen bg-gradient-to-b from-[#FFFBF7] via-[#FFF8F3] to-[#F5E6D3] flex flex-col justify-between">
       {/* Social Floating Buttons */}
       <div className="fixed top-6 left-6 z-40 flex gap-3">
         <a
@@ -554,7 +554,7 @@ export default function Home() {
         </section>
 
         {/* Reviews Section */}
-        <section className="py-12 px-4 pb-28">
+        <section className="py-12 px-4 pb-12">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-[#3D2817] text-center mb-2" style={{ fontFamily: 'Alef' }}>
               לקוחות מפרגנים על המארזים 💬
@@ -593,6 +593,21 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      {/* Footer with Shield Icon for Admin Access */}
+      <footer className="py-8 px-4 border-t border-[#E8D4C8] bg-[#FFF8F3] text-center text-xs text-[#6B4423] mt-12 mb-16 sm:mb-0">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" dir="rtl">
+          <p>© {new Date().getFullYear()} made.by.bareket — כל הזכויות שמורות</p>
+          <a
+            href="/admin"
+            className="text-[#6B4423]/70 hover:text-[#C85A54] transition-colors p-2 rounded-xl hover:bg-[#E8B4A8]/20 flex items-center gap-1.5 font-bold border border-transparent hover:border-[#E8D4C8]"
+            title="כניסה למערכת ניהול (Admin)"
+          >
+            <Shield size={18} className="text-[#C85A54]" />
+            <span>כניסה למערכת ניהול 🛡️</span>
+          </a>
+        </div>
+      </footer>
 
       {/* Active Mystery Box Preview Modal */}
       {activeMysteryBox && (
@@ -1003,7 +1018,7 @@ export default function Home() {
                         className={`flex-1 font-bold py-3.5 rounded-2xl text-base transition-all duration-300 cursor-pointer ${
                           isFormValid
                             ? 'bg-[#E8B4A8] hover:bg-[#D89B8E] text-[#3D2817] shadow-md hover:shadow-lg active:scale-[0.98]'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed border-none shadow-none'
+                            : 'bg-gray-300 text-gray-[#555] cursor-not-allowed border-none shadow-none'
                         }`}
                       >
                         המשך לתשלום ב-Bit 💳
