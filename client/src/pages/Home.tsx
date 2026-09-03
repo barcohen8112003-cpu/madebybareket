@@ -375,7 +375,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FFFBF7] via-[#FFF8F3] to-[#F5E6D3] flex flex-col justify-between">
-      {/* Social Floating Buttons */}
+      {/* Social Floating Buttons - Top Left */}
       <div className="fixed top-6 left-6 z-40 flex gap-3">
         <a
           href="https://www.instagram.com/made.by.bareket?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
@@ -398,6 +398,17 @@ export default function Home() {
           </svg>
         </a>
       </div>
+
+      {/* Floating Shield Button for Admin Panel - Bottom Left */}
+      <a
+        href="/admin"
+        className={`fixed left-6 z-40 bg-[#3D2817] hover:bg-[#5C4033] text-white p-3.5 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 border-2 border-[#E8B4A8] flex items-center justify-center group ${
+          cart.length > 0 ? 'bottom-24 md:bottom-28' : 'bottom-6'
+        }`}
+        title="כניסה למערכת ניהול (Admin Panel)"
+      >
+        <Shield className="w-6 h-6 text-[#E8B4A8] group-hover:rotate-12 transition-transform" />
+      </a>
 
       <div className="space-y-12">
         {/* Hero Section */}
@@ -594,7 +605,7 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Footer with Shield Icon for Admin Access */}
+      {/* Footer */}
       <footer className="py-8 px-4 border-t border-[#E8D4C8] bg-[#FFF8F3] text-center text-xs text-[#6B4423] mt-12 mb-16 sm:mb-0">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" dir="rtl">
           <p>© {new Date().getFullYear()} made.by.bareket — כל הזכויות שמורות</p>
