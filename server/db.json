@@ -192,6 +192,19 @@
         "initiate_checkout": 0,
         "purchase": 0
       }
+    },
+    "2026-09-22": {
+      "visitors": 1,
+      "pageviews": 1,
+      "referrers": {
+        "Direct ": 2
+      },
+      "funnel": {
+        "visitor": 1,
+        "add_to_cart": 0,
+        "initiate_checkout": 0,
+        "purchase": 0
+      }
     }
   }
 }
