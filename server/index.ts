@@ -157,6 +157,11 @@ async function startServer() {
     }
   });
 
+  app.get("/api/products", (_req, res) => {
+    const db = readDb();
+    return res.status(200).json(db.products);
+  });
+
   // Admin Dashboard Data APIs
   app.get("/api/admin/orders", authenticateJWT, (_req, res) => {
     const db = readDb();
@@ -218,6 +223,7 @@ async function startServer() {
       id: current.id,
       name: String(next.name).trim(),
       price: Number(next.price),
+      image: String(next.image || current.image),
       hidden: Boolean(next.hidden),
     };
     writeDb(db);

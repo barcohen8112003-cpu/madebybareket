@@ -95,6 +95,7 @@ export default function AdminLogin() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loading}
+                autoComplete="username"
                 className="w-full pl-4 pr-10 py-3 bg-white border border-[#E8D4C8] rounded-2xl text-[#5C4033] placeholder-[#C2B2A2] focus:outline-hidden focus:ring-2 focus:ring-[#E8B4A8] transition-all text-right"
               />
             </div>
@@ -112,6 +113,7 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
+                autoComplete="current-password"
                 className="w-full pl-4 pr-10 py-3 bg-white border border-[#E8D4C8] rounded-2xl text-[#5C4033] placeholder-[#C2B2A2] focus:outline-hidden focus:ring-2 focus:ring-[#E8B4A8] transition-all text-right"
               />
             </div>

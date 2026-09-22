@@ -91,6 +91,23 @@ export default function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error("נא לבחור קובץ תמונה בלבד");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setEditImage(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -112,6 +129,9 @@ export default function AdminDashboard() {
   // Edit states
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editPriceVal, setEditPriceVal] = useState<number>(0);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editImage, setEditImage] = useState('');
   
   // Add product states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -206,6 +226,51 @@ export default function AdminDashboard() {
       setEditingProductId(null);
     } catch {
       toast.error("שגיאה בעדכון המחיר");
+    }
+  };
+
+  const openProductEditor = (product: Product) => {
+    setEditingProduct(product);
+    setEditName(product.name);
+    setEditPriceVal(product.price);
+    setEditImage(product.image);
+  };
+
+  const handleEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const name = editName.trim();
+    const price = Number(editPriceVal);
+    if (!name || !Number.isFinite(price) || price <= 0) {
+      toast.error("נא להזין שם ומחיר תקינים");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          name,
+          price,
+          image: editImage || editingProduct.image,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "שגיאה בעדכון המוצר");
+      }
+
+      const updatedProduct = await res.json();
+      setProducts(prev => prev.map(product => (
+        product.id === updatedProduct.id ? updatedProduct : product
+      )));
+      setEditingProduct(null);
+      setEditingProductId(null);
+      toast.success("המוצר נשמר בהצלחה ויישאר גם אחרי רענון");
+    } catch (error: any) {
+      toast.error(error.message || "שגיאה בעדכון המוצר");
     }
   };
 
@@ -672,16 +737,24 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="py-4 px-6 text-center">
-                          <button
-                            onClick={() => toggleVisibility(product.id, product.hidden)}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-                              product.hidden 
-                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
-                                : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                            }`}
-                          >
-                            {product.hidden ? "הצג באתר" : "הסתר מהאתר"}
-                          </button>
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            <button
+                              onClick={() => openProductEditor(product)}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#FAF5F0] text-[#8B7365] hover:bg-[#F3E5D8] transition-all cursor-pointer"
+                            >
+                              ערוך מוצר
+                            </button>
+                            <button
+                              onClick={() => toggleVisibility(product.id, product.hidden)}
+                              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                                product.hidden
+                                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                  : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+                              }`}
+                            >
+                              {product.hidden ? "הצג באתר" : "הסתר מהאתר"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -897,6 +970,98 @@ export default function AdminDashboard() {
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 border-[#E8D4C8] text-[#8B7365] py-5 rounded-xl cursor-pointer"
+                >
+                  ביטול
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingProduct && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl border border-[#E8D4C8] shadow-2xl p-6 md:p-8 w-full max-w-lg relative animate-in zoom-in-95 duration-200" dir="rtl">
+            <button
+              onClick={() => setEditingProduct(null)}
+              className="absolute top-4 left-4 p-2 text-[#8B7365] hover:text-[#5C4033] hover:bg-[#FAF5F0] rounded-full transition-colors cursor-pointer"
+              aria-label="סגירת עריכת מוצר"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 className="text-xl font-bold text-[#5C4033] mb-6 flex items-center gap-2">
+              <Edit2 size={22} className="text-[#D78B78]" />
+              <span>עריכת מוצר</span>
+            </h2>
+
+            <form onSubmit={handleEditProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#5C4033] mb-1">שם המוצר</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-[#E8D4C8] rounded-xl text-sm focus:ring-2 focus:ring-[#D78B78] focus:outline-hidden"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#5C4033] mb-1">מחיר (₪)</label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={editPriceVal}
+                  onChange={(e) => setEditPriceVal(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 bg-white border border-[#E8D4C8] rounded-xl text-sm focus:ring-2 focus:ring-[#D78B78] focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#5C4033] mb-2">תמונת המוצר</label>
+                <div
+                  onClick={() => document.getElementById('edit-product-image-upload')?.click()}
+                  className="border-2 border-dashed border-[#E8D4C8] hover:border-[#D78B78] hover:bg-[#FFF8F3] rounded-2xl p-4 text-center cursor-pointer transition-all"
+                >
+                  <input
+                    type="file"
+                    id="edit-product-image-upload"
+                    accept="image/*"
+                    onChange={handleEditFileChange}
+                    className="hidden"
+                  />
+                  {editImage ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <img
+                        src={getProductImageSrc(editImage)}
+                        alt="תצוגה מקדימה"
+                        className="w-24 h-24 object-cover rounded-xl border border-[#E8D4C8]"
+                      />
+                      <span className="text-xs text-[#8B7365]">לחץ כדי לבחור תמונה אחרת</span>
+                    </div>
+                  ) : (
+                    <div className="py-4">
+                      <Upload size={22} className="mx-auto mb-2 text-[#D78B78]" />
+                      <span className="text-xs text-[#8B7365]">לחץ לבחירת תמונה</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-[#D78B78] hover:bg-[#C27A68] text-white py-5 rounded-xl cursor-pointer"
+                >
+                  שמור שינויים
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingProduct(null)}
                   className="flex-1 border-[#E8D4C8] text-[#8B7365] py-5 rounded-xl cursor-pointer"
                 >
                   ביטול

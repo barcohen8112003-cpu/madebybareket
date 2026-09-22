@@ -100,6 +100,7 @@ export default function Home() {
       return [];
     }
   });
+  const [storefrontCookies, setStorefrontCookies] = useState<Cookie[]>(COOKIES);
 
   useEffect(() => {
     try {
@@ -130,6 +131,57 @@ export default function Home() {
       setHasBirthdaySign(false);
     }
   }, [cart.length, hasBirthdaySign]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/products')
+      .then(async response => {
+        if (!response.ok) throw new Error('Failed to load products');
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Invalid products response');
+        return data;
+      })
+      .then(products => {
+        if (cancelled) return;
+
+        const productsById = new Map(products.map(product => [String(product.id), product]));
+        const updatedCookies = COOKIES
+          .filter(cookie => {
+            const product = productsById.get(cookie.id);
+            return !product || !product.hidden;
+          })
+          .map(cookie => {
+            const product = productsById.get(cookie.id);
+            if (!product) return cookie;
+            return {
+              ...cookie,
+              name: String(product.name || cookie.name),
+              price: Number(product.price) || cookie.price,
+              image: String(product.image || cookie.image),
+            };
+          });
+
+        const staticIds = new Set(COOKIES.map(cookie => cookie.id));
+        const addedProducts = products
+          .filter(product => !staticIds.has(String(product.id)) && !product.hidden)
+          .map(product => ({
+            id: String(product.id),
+            name: String(product.name || 'מוצר חדש'),
+            price: Number(product.price) || 0,
+            image: String(product.image || '/logo.png'),
+          }));
+
+        setStorefrontCookies([...updatedCookies, ...addedProducts]);
+      })
+      .catch(error => {
+        console.error('Error loading products from server', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Active Mystery Box Preview Modal State
   const [activeMysteryBox, setActiveMysteryBox] = useState<{
@@ -625,7 +677,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {COOKIES.map((cookie) => {
+              {storefrontCookies.map((cookie) => {
                 const cartSingleItem = cart.find(item => item.type === 'single' && item.id === cookie.id);
                 const qtyInCart = cartSingleItem ? cartSingleItem.quantity : 0;
 
