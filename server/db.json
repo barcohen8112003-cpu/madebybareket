@@ -162,7 +162,27 @@
       "hidden": true
     }
   ],
-  "orders": [],
+  "orders": [
+    {
+      "id": "TEST-TELEGRAM-1790113838",
+      "customerName": "בדיקת מערכת",
+      "phone": "0500000000",
+      "pickupDay": "בדיקה",
+      "pickupTimeSlot": "00:00-00:30",
+      "birthdaySign": false,
+      "items": [
+        {
+          "id": "telegram-test",
+          "name": "הזמנת בדיקה לטלגרם",
+          "price": 1,
+          "quantity": 1,
+          "type": "single"
+        }
+      ],
+      "totalPrice": 1,
+      "createdAt": "2026-09-22T21:50:38.818Z"
+    }
+  ],
   "analytics": {
     "2026-07-23": {
       "visitors": 3,
@@ -203,7 +223,7 @@
         "visitor": 5,
         "add_to_cart": 0,
         "initiate_checkout": 0,
-        "purchase": 0
+        "purchase": 1
       }
     }
   }
