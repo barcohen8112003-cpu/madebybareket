@@ -270,9 +270,9 @@ async function startServer() {
     try {
       const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
+        configFile: path.resolve(__dirname, "..", "vite.config.ts"),
         server: { middlewareMode: true },
         appType: "custom",
-        root: path.resolve(__dirname, "..", "client"),
       });
       app.use(vite.middlewares);
       app.use("*", async (req, res, next) => {
