@@ -113,6 +113,7 @@ export default function Home() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 'success'>(1);
   const [currentOrderId, setCurrentOrderId] = useState<string>('');
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -372,6 +373,8 @@ export default function Home() {
   };
 
   const handleProceedToPayment = async () => {
+    if (isSubmittingOrder) return;
+
     const cleanPhone = phoneNumber.replace(/[-\s]/g, '');
     const isPhoneValid = /^05\d{8}$/.test(cleanPhone);
     
@@ -391,6 +394,7 @@ export default function Home() {
 
     if (!isFormValid) return;
 
+    setIsSubmittingOrder(true);
     const orderRef = `MB-${Math.floor(100000 + Math.random() * 900000)}`;
     setCurrentOrderId(orderRef);
 
@@ -438,11 +442,15 @@ export default function Home() {
       }
       if (result.telegramSent === false) {
         toast.warning("ההזמנה נשמרה, אבל הודעת הטלגרם לא נשלחה. נבדוק את זה בהקדם.");
+      } else {
+        toast.success("ההזמנה נשלחה לבוט בהצלחה. אפשר להמשיך לתשלום ב-Bit.");
       }
     } catch (err) {
       console.error("Order API request error:", err);
       toast.error("לא הצלחנו לשמור את ההזמנה. נסו שוב בעוד רגע.");
       return;
+    } finally {
+      setIsSubmittingOrder(false);
     }
 
     setCheckoutStep(2);
@@ -1138,7 +1146,7 @@ export default function Home() {
                         ביטול
                       </Button>
                       <Button
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmittingOrder}
                         onClick={handleProceedToPayment}
                         className={`flex-1 font-bold py-3.5 rounded-2xl text-base transition-all duration-300 cursor-pointer ${
                           isFormValid
@@ -1146,7 +1154,7 @@ export default function Home() {
                             : 'bg-gray-300 text-gray-[#555] cursor-not-allowed border-none shadow-none'
                         }`}
                       >
-                        המשך לתשלום ב-Bit 💳
+                        {isSubmittingOrder ? 'שולח את ההזמנה לבוט...' : 'המשך לתשלום ב-Bit 💳'}
                       </Button>
                     </div>
                   );
