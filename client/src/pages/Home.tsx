@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, Shuffle, Sparkles, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Cookie {
   id: string;
@@ -75,6 +76,20 @@ const generateUniqueRandomFlavors = (size: number): { cookie: Cookie; quantity: 
   return selected.map(cookie => ({ cookie, quantity: 1 }));
 };
 
+function trackAnalyticsEvent(type: 'pageview' | 'visitor' | 'add_to_cart' | 'initiate_checkout') {
+  void fetch('/api/analytics/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
+    body: JSON.stringify({
+      type,
+      referrer: document.referrer || 'Direct / קישור ישיר',
+    }),
+  }).catch(() => {
+    // Analytics must never block shopping.
+  });
+}
+
 export default function Home() {
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
@@ -128,6 +143,18 @@ export default function Home() {
 
   const cookiesSectionRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    trackAnalyticsEvent('pageview');
+    try {
+      if (!sessionStorage.getItem('bareket_visitor_tracked')) {
+        sessionStorage.setItem('bareket_visitor_tracked', '1');
+        trackAnalyticsEvent('visitor');
+      }
+    } catch {
+      trackAnalyticsEvent('visitor');
+    }
+  }, []);
+
   const handleOpenMysteryBoxModal = (box: MysteryBoxConfig) => {
     setActiveMysteryBox({
       config: box,
@@ -159,6 +186,7 @@ export default function Home() {
         quantity: 1
       }
     ]);
+    trackAnalyticsEvent('add_to_cart');
     setActiveMysteryBox(null);
   };
 
@@ -177,6 +205,7 @@ export default function Home() {
         quantity: 1
       }
     ]);
+    trackAnalyticsEvent('add_to_cart');
   };
 
   const handleAddSingleCookie = (cookie: Cookie) => {
@@ -195,6 +224,7 @@ export default function Home() {
         quantity: 1
       }];
     });
+    trackAnalyticsEvent('add_to_cart');
   };
 
   const handleRemoveOneSingleCookie = (cookieId: string) => {
@@ -237,6 +267,7 @@ export default function Home() {
   };
 
   const handleOpenCheckout = () => {
+    trackAnalyticsEvent('initiate_checkout');
     setCheckoutStep(1);
     setFullName('');
     setPhoneNumber('');
@@ -313,7 +344,7 @@ export default function Home() {
     }).join('\n');
 
     try {
-      await fetch('/api/orders', {
+      const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -325,10 +356,26 @@ export default function Home() {
           birthdaySign: hasBirthdaySign,
           orderSummaryText,
           totalPrice: getTotalPrice(),
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            type: item.type,
+            flavors: item.flavors?.map(flavor => ({
+              name: flavor.cookie.name,
+              quantity: flavor.quantity,
+            })),
+          })),
         }),
       });
+      if (!response.ok) {
+        throw new Error('Order request failed');
+      }
     } catch (err) {
       console.error("Order API request error:", err);
+      toast.error("לא הצלחנו לשמור את ההזמנה. נסו שוב בעוד רגע.");
+      return;
     }
 
     setCheckoutStep(2);

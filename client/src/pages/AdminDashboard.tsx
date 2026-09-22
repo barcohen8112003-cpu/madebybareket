@@ -63,6 +63,7 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [analytics, setAnalytics] = useState<Record<string, DayAnalytics>>({});
+  const [telegramConfigured, setTelegramConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'today' | 'weekly' | 'monthly'>('monthly');
   
@@ -143,8 +144,13 @@ export default function AdminDashboard() {
       const analyticRes = await fetch('/api/admin/analytics', { headers: getHeaders() });
       if (!analyticRes.ok) throw new Error("שגיאה בטעינת נתונים");
       const analyticData = await analyticRes.json();
-      setAnalytics(analyticData.dailyAnalytics || {});
+      setAnalytics(analyticData.dailyAnalytics || analyticData.analytics || {});
       setOrders(analyticData.orders || []);
+      const telegramRes = await fetch('/api/admin/telegram-status', { headers: getHeaders() });
+      if (telegramRes.ok) {
+        const telegramData = await telegramRes.json();
+        setTelegramConfigured(Boolean(telegramData.configured));
+      }
     } catch (err: any) {
       toast.error(err.message || "שגיאה בטעינת נתוני לוח הבקרה");
       localStorage.removeItem('admin_token');
@@ -313,6 +319,12 @@ export default function AdminDashboard() {
 
   const stats = getAggregatedStats();
 
+  const getProductImageSrc = (image: string) => {
+    if (!image) return '/logo.png';
+    if (image.startsWith('/') || image.startsWith('data:') || image.startsWith('http')) return image;
+    return `/${image}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF5F0] flex flex-col items-center justify-center gap-4">
@@ -335,6 +347,11 @@ export default function AdminDashboard() {
               <h1 className="text-xl font-bold text-[#5C4033]">לוח בקרת מנהל</h1>
               <p className="text-xs text-[#8B7365]">ניהול מכירות ומוצרים - Made by Bareket</p>
             </div>
+            {telegramConfigured === false && (
+              <div className="hidden md:block text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                Telegram לא מוגדר
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -585,10 +602,10 @@ export default function AdminDashboard() {
                       <tr key={product.id} className="text-[#5C4033] hover:bg-slate-50 transition-colors text-sm">
                         <td className="py-4 px-6">
                           <img 
-                            src={product.image || 'logo.png'} 
+                             src={getProductImageSrc(product.image)}
                             alt={product.name} 
                             className="w-12 h-12 object-cover rounded-xl border border-[#E8D4C8]" 
-                            onError={(e) => { (e.target as HTMLImageElement).src = 'logo.png'; }}
+                             onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
                           />
                         </td>
                         <td className="py-4 px-6">
@@ -725,7 +742,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="py-4 px-6 text-xs max-w-[280px]">
                             <div className="flex flex-col gap-1">
-                              {order.items.map((item, idx) => (
+                               {(order.items || []).map((item, idx) => (
                                 <div key={idx} className="bg-[#FAF5F0] p-1.5 rounded-lg border border-[#E8D4C8]/30">
                                   <span className="font-bold text-[#D78B78]">{item.quantity}x</span> {item.name}
                                   {item.flavors && item.flavors.length > 0 && (

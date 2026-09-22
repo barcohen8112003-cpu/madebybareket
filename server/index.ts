@@ -4,10 +4,79 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { generateToken, authenticateJWT, checkAdminPassword, AuthenticatedRequest } from "./auth.js";
-import { readDb, writeDb, getOrCreateTodayAnalytics, Order } from "./db.js";
+import { readDb, writeDb, getOrCreateTodayAnalytics, Order, Product } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function escapeTelegramHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+async function sendTelegramOrderNotification(order: Order, orderSummaryText: string): Promise<boolean> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    console.warn("Telegram notification skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is missing");
+    return false;
+  }
+
+  const formattedDateTime = new Date(order.createdAt).toLocaleString("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const birthdaySignText = order.birthdaySign ? "כן (+5 ₪)" : "לא";
+  const message = [
+    "🚨 <b>הזמנה חדשה התקבלה מ-Made by Bareket!</b> 🍪",
+    "",
+    `<b>מספר הזמנה:</b> #${escapeTelegramHtml(order.id)}`,
+    `<b>שם הלקוח:</b> ${escapeTelegramHtml(order.customerName || "לא צוין")}`,
+    `<b>טלפון:</b> ${escapeTelegramHtml(order.phone || "לא צוין")}`,
+    `<b>יום איסוף:</b> ${escapeTelegramHtml(order.pickupDay || "לא צוין")}`,
+    `<b>טווח שעות איסוף:</b> ${escapeTelegramHtml(order.pickupTimeSlot || "לא צוין")}`,
+    `<b>שלט מזל טוב:</b> ${birthdaySignText}`,
+    "",
+    "<b>פירוט ההזמנה:</b>",
+    escapeTelegramHtml(orderSummaryText || "אין פירוט"),
+    "",
+    `<b>סכום לתשלום:</b> ${escapeTelegramHtml(order.totalPrice)} ₪`,
+    `<b>תאריך ושעה:</b> ${escapeTelegramHtml(formattedDateTime)}`,
+    "",
+    "🔴 <b>מחכה לאימות תשלום ב-Bit!</b> ⚠️",
+  ].join("\n");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
+      signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      console.error("Telegram send failed:", response.status, result.description || "unknown Telegram error");
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Telegram send error:", error);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -69,7 +138,7 @@ async function startServer() {
         pickupDay: pickupDay || "",
         pickupTimeSlot: pickupTimeSlot || "",
         birthdaySign: !!birthdaySign,
-        items: items || [],
+         items: Array.isArray(items) ? items : [],
         totalPrice: totalPrice || 0,
         createdAt: new Date().toISOString()
       };
@@ -80,33 +149,8 @@ async function startServer() {
       todayAnalytics.funnel.purchase += 1;
       writeDb(db);
 
-      // Send to Telegram if tokens exist
-      const botToken = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
-
-      if (botToken && chatId) {
-        const now = new Date();
-        const formattedDateTime = now.toLocaleString("he-IL", {
-          timeZone: "Asia/Jerusalem",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-
-        const birthdaySignText = birthdaySign ? "כן (+5 ₪)" : "לא";
-        const message = `🚨 *הזמנה חדשה התקבלה מ-Made by Bareket!* 🍪\n\n*מספר הזמנה:* #${orderRef}\n*שם הלקוח:* ${fullName || 'לא צוין'}\n*טלפון:* ${phoneNumber || 'לא צוין'}\n*יום איסוף:* ${pickupDay || 'לא צוין'}\n*טווח שעות איסוף:* ${pickupTimeSlot || 'לא צוין'}\n*שלט מזל טוב:* ${birthdaySignText}\n\n*פירוט ההזמנה:*\n${orderSummaryText || 'אין פירוט'}\n\n*סכום לתשלום:* ${totalPrice} ₪\n*תאריך ושעה:* ${formattedDateTime}\n\n🔴 *מחכה לאימות תשלום ב-Bit!* ⚠️`;
-
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" }),
-        }).catch(err => console.error("Telegram send error:", err));
-      }
-
-      return res.status(200).json({ success: true, orderId: orderRef });
+       const telegramSent = await sendTelegramOrderNotification(newOrder, orderSummaryText || "");
+       return res.status(200).json({ success: true, orderId: orderRef, telegramSent });
     } catch (error) {
       console.error("Error handling order submission:", error);
       return res.status(500).json({ success: false, error: "Internal server error" });
@@ -129,19 +173,61 @@ async function startServer() {
 
   app.get("/api/admin/analytics", authenticateJWT, (_req, res) => {
     const db = readDb();
-    return res.status(200).json(db.analytics);
+    return res.status(200).json({ dailyAnalytics: db.analytics, orders: db.orders });
   });
 
-  app.get("/api/admin/products", (_req, res) => {
+  app.get("/api/admin/products", authenticateJWT, (_req, res) => {
     const db = readDb();
     return res.status(200).json(db.products);
   });
 
   app.post("/api/admin/products", authenticateJWT, (req, res) => {
     const db = readDb();
-    db.products = req.body;
+    const { name, price, desc = "", image = "cookies/cornflakes.jpg", category = "sweet", hidden = false } = req.body || {};
+    if (!name || !Number.isFinite(Number(price)) || Number(price) <= 0) {
+      return res.status(400).json({ error: "שם ומחיר תקינים נדרשים" });
+    }
+    const product: Product = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: String(name).trim(),
+      price: Number(price),
+      desc: String(desc),
+      image: String(image),
+      category: String(category),
+      hidden: Boolean(hidden),
+    };
+    db.products.push(product);
     writeDb(db);
-    return res.status(200).json({ success: true });
+    return res.status(201).json(product);
+  });
+
+  app.put("/api/admin/products/:id", authenticateJWT, (req, res) => {
+    const db = readDb();
+    const index = db.products.findIndex(product => product.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: "המוצר לא נמצא" });
+    }
+
+    const current = db.products[index];
+    const next = { ...current, ...req.body };
+    if (!next.name || !Number.isFinite(Number(next.price)) || Number(next.price) <= 0) {
+      return res.status(400).json({ error: "שם ומחיר תקינים נדרשים" });
+    }
+    db.products[index] = {
+      ...next,
+      id: current.id,
+      name: String(next.name).trim(),
+      price: Number(next.price),
+      hidden: Boolean(next.hidden),
+    };
+    writeDb(db);
+    return res.status(200).json(db.products[index]);
+  });
+
+  app.get("/api/admin/telegram-status", authenticateJWT, (_req, res) => {
+    return res.status(200).json({
+      configured: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
+    });
   });
 
   // Track visitor analytics

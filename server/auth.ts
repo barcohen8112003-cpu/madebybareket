@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'madebybareket_secret_key_123!';
+const JWT_SECRET =
+  process.env.SESSION_SECRET ||
+  process.env.JWT_SECRET ||
+  'madebybareket_secret_key_123!';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 export function generateToken(payload: object): string {
