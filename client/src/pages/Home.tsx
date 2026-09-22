@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Instagram, ShoppingCart, Trash2, Plus, Minus, Star, Heart, Calendar, Clock, Gift, Info, Check, MapPin, Shuffle, Sparkles, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import CookieChatBot from '@/components/CookieChatBot';
 
 interface Cookie {
   id: string;
@@ -123,6 +124,12 @@ export default function Home() {
   const [cancellationConfirmed, setCancellationConfirmed] = useState(false);
   const [hasBirthdaySign, setHasBirthdaySign] = useState(false);
 
+  useEffect(() => {
+    if (cart.length === 0 && hasBirthdaySign) {
+      setHasBirthdaySign(false);
+    }
+  }, [cart.length, hasBirthdaySign]);
+
   // Active Mystery Box Preview Modal State
   const [activeMysteryBox, setActiveMysteryBox] = useState<{
     config: MysteryBoxConfig;
@@ -224,6 +231,59 @@ export default function Home() {
         quantity: 1
       }];
     });
+    trackAnalyticsEvent('add_to_cart');
+  };
+
+  const getChatCookie = (name: string): Cookie | undefined => {
+    const normalizedName = name.trim().toLowerCase();
+    const aliases: Record<string, string> = {
+      'אוראו': '1',
+      "m&m's": '5',
+      'בוואנו': '10',
+      'בואנו': '10',
+      'במבה אדומה': '9',
+    };
+    const aliasedId = aliases[normalizedName];
+    return COOKIES.find(cookie => cookie.id === aliasedId || cookie.name.toLowerCase() === normalizedName);
+  };
+
+  const handleAddChatCookie = (name: string) => {
+    const cookie = getChatCookie(name);
+    if (!cookie) {
+      toast.error(`לא מצאתי את העוגייה "${name}" בסל`);
+      return;
+    }
+    handleAddSingleCookie(cookie);
+  };
+
+  const handleAddChatBox = (
+    size: number,
+    price: number,
+    items: { cookieName: string; qty: number }[]
+  ) => {
+    const flavors = items.map(item => ({
+      cookie: getChatCookie(item.cookieName) ?? {
+        id: `chat-${item.cookieName}`,
+        name: item.cookieName,
+        price: 0,
+        image: '/logo.png',
+      },
+      quantity: item.qty,
+    }));
+
+    setCart(prev => [
+      ...prev,
+      {
+        instanceId: `chat-box-${size}-${Date.now()}-${Math.random()}`,
+        type: 'box',
+        id: `box-${size}`,
+        name: `מארז ${size} עוגיות`,
+        price,
+        image: '/logo.png',
+        flavors,
+        quantity: 1,
+      },
+    ]);
     trackAnalyticsEvent('add_to_cart');
   };
 
@@ -371,6 +431,13 @@ export default function Home() {
       });
       if (!response.ok) {
         throw new Error('Order request failed');
+      }
+      const result = await response.json().catch(() => null);
+      if (!result?.success) {
+        throw new Error('Order was not saved');
+      }
+      if (result.telegramSent === false) {
+        toast.warning("ההזמנה נשמרה, אבל הודעת הטלגרם לא נשלחה. נבדוק את זה בהקדם.");
       }
     } catch (err) {
       console.error("Order API request error:", err);
@@ -1258,6 +1325,11 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <CookieChatBot
+        onAddBoxToCart={handleAddChatBox}
+        onAddSingleCookieToCart={handleAddChatCookie}
+      />
 
       {/* Padding for sticky cart */}
       {cart.length > 0 && <div className="h-48 md:h-32"></div>}

@@ -194,13 +194,13 @@
       }
     },
     "2026-09-22": {
-      "visitors": 2,
-      "pageviews": 2,
+      "visitors": 3,
+      "pageviews": 3,
       "referrers": {
-        "Direct ": 4
+        "Direct ": 6
       },
       "funnel": {
-        "visitor": 2,
+        "visitor": 3,
         "add_to_cart": 0,
         "initiate_checkout": 0,
         "purchase": 0
