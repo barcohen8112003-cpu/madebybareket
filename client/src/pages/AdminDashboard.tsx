@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { 
   Cookie, Plus, Shield, TrendingUp, Users, ShoppingBag, 
-  Eye, EyeOff, Edit2, LogOut, Check, X, RefreshCw, Layers, Upload, RotateCw, ZoomIn
+  Eye, EyeOff, Edit2, LogOut, Check, X, RefreshCw, Layers, Upload, RotateCw, ZoomIn, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -258,6 +258,29 @@ export default function AdminDashboard() {
     localStorage.removeItem('admin_token');
     toast.success("התנתקת בהצלחה!");
     setLocation('/admin/login');
+  };
+
+  const handleCompleteOrder = async (order: Order) => {
+    const shouldDelete = window.confirm(
+      `לסמן את הזמנה #${order.id} כסגורה ולמחוק אותה מהלוח?\nהפעולה לא ניתנת לביטול.`
+    );
+    if (!shouldDelete) return;
+
+    try {
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.id)}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "לא ניתן למחוק את ההזמנה");
+      }
+
+      setOrders(prev => prev.filter(currentOrder => currentOrder.id !== order.id));
+      toast.success(`הזמנה #${order.id} סומנה כסגורה ונמחקה`);
+    } catch (error: any) {
+      toast.error(error.message || "שגיאה במחיקת ההזמנה");
+    }
   };
 
   // Product visibility toggle
@@ -864,6 +887,7 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6">שלט מזל טוב?</th>
                         <th className="py-4 px-6">הזמנה</th>
                         <th className="py-4 px-6 text-center">סה"כ לתשלום</th>
+                        <th className="py-4 px-6 text-center">פעולות</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E8D4C8]">
@@ -903,6 +927,16 @@ export default function AdminDashboard() {
                           </td>
                           <td className="py-4 px-6 text-center font-bold text-[#D78B78] text-base">
                             ₪{order.totalPrice}
+                          </td>
+                          <td className="py-4 px-6 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleCompleteOrder(order)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+                            >
+                              <Check size={14} />
+                              סיום ומחיקה
+                            </button>
                           </td>
                         </tr>
                       ))}
