@@ -77,21 +77,44 @@ export default function AdminDashboard() {
     }
   };
 
-  const processFile = (file: File) => {
+  const optimizeImage = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("לא ניתן לקרוא את התמונה"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("לא ניתן לעבד את התמונה"));
+      image.onload = () => {
+        const maxSize = 1200;
+        const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error("לא ניתן להכין את התמונה"));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error("נא לבחור קובץ תמונה בלבד");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setNewImage(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      setNewImage(await optimizeImage(file));
+    } catch (error: any) {
+      toast.error(error.message || "לא ניתן לעבד את התמונה");
+    }
   };
 
-  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -99,13 +122,11 @@ export default function AdminDashboard() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setEditImage(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      setEditImage(await optimizeImage(file));
+    } catch (error: any) {
+      toast.error(error.message || "לא ניתן לעבד את התמונה");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -277,7 +298,8 @@ export default function AdminDashboard() {
   // Add Product submission
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newPrice) {
+    const price = Number(newPrice);
+    if (!newName.trim() || !Number.isFinite(price) || price <= 0) {
       toast.error("נא למלא שם ומחיר");
       return;
     }
@@ -288,13 +310,16 @@ export default function AdminDashboard() {
         headers: getHeaders(),
         body: JSON.stringify({
           name: newName,
-          price: Number(newPrice),
+          price,
           desc: newDesc,
           category: newCategory,
           image: newImage
         })
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `שגיאה בהוספת מוצר (${res.status})`);
+      }
       const addedProduct = await res.json();
       
       toast.success("מוצר חדש נוסף בהצלחה!");
@@ -306,8 +331,8 @@ export default function AdminDashboard() {
       setNewDesc('');
       setNewCategory('sweet');
       setNewImage('cookies/cornflakes.jpg');
-    } catch {
-      toast.error("שגיאה בהוספת מוצר");
+    } catch (error: any) {
+      toast.error(error.message || "שגיאה בהוספת מוצר");
     }
   };
 
