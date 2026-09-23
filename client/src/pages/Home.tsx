@@ -70,6 +70,20 @@ const MYSTERY_BOXES: MysteryBoxConfig[] = [
   { size: 10, name: 'מארז 10 עוגיות מיסטרי', price: 150, emoji: '🎉', description: '10 עוגיות בטעמים אקראיים וייחודיים ללא כפילויות' },
 ];
 
+const PICKUP_DAYS = [
+  { value: 'יום חמישי', label: 'חמישי', emoji: '🌸', description: 'איסוף בסוף השבוע' },
+  { value: 'יום שישי', label: 'שישי', emoji: '✨', description: 'איסוף בסוף השבוע' },
+];
+
+const PICKUP_TIME_SLOTS = [
+  '09:00 - 11:00',
+  '11:00 - 13:00',
+  '13:00 - 15:00',
+  '15:00 - 17:00',
+  '17:00 - 19:00',
+  '18:00 - 20:00',
+];
+
 // Helper to generate UNIQUE random cookie flavors for a mystery box (no duplicate cookies!)
 const generateUniqueRandomFlavors = (size: number): { cookie: Cookie; quantity: number }[] => {
   const shuffled = [...COOKIES].sort(() => 0.5 - Math.random());
@@ -492,11 +506,6 @@ export default function Home() {
       if (!result?.success) {
         throw new Error('Order was not saved');
       }
-      if (result.telegramSent === false) {
-        toast.warning("ההזמנה נשמרה, אבל הודעת הטלגרם לא נשלחה. נבדוק את זה בהקדם.");
-      } else {
-        toast.success("ההזמנה נשלחה לבוט בהצלחה. אפשר להמשיך לתשלום ב-Bit.");
-      }
     } catch (err) {
       console.error("Order API request error:", err);
       toast.error("לא הצלחנו לשמור את ההזמנה. נסו שוב בעוד רגע.");
@@ -542,7 +551,7 @@ export default function Home() {
         <span className="text-[#C85A54] font-extrabold">📍 איסוף עצמי מחיפה בלבד!</span>
       </div>
       <p className="text-sm text-[#6B4423] text-center font-medium">
-        <strong>מדיניות הזמנות:</strong> הזמנות בימים א'–ד', קבלת העוגיות בסוף השבוע (חמישי-שישי/שבת).
+         <strong>מדיניות הזמנות:</strong> הזמנות בימים א'–ד', קבלת העוגיות בסוף השבוע (חמישי-שישי).
       </p>
     </div>
   );
@@ -1090,39 +1099,92 @@ export default function Home() {
 
                   {/* Pick-up Day Selector */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      יום איסוף (בסוף השבוע בחיפה) <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <select
-                      value={pickupDay}
-                      onChange={(e) => setPickupDay(e.target.value)}
-                      className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3] cursor-pointer outline-none"
-                    >
-                      <option value="">בחר יום איסוף...</option>
-                      <option value="יום חמישי">יום חמישי</option>
-                      <option value="יום שישי">יום שישי</option>
-                      <option value="יום שבת">יום שבת</option>
-                    </select>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-[#3D2817]">
+                        יום איסוף (בסוף השבוע בחיפה) <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <span className="text-[11px] font-bold text-[#C85A54] bg-[#FFF0EC] px-2 py-1 rounded-full">
+                        בוחרים יום
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="בחירת יום איסוף">
+                      {PICKUP_DAYS.map((day) => {
+                        const isSelected = pickupDay === day.value;
+                        return (
+                          <button
+                            key={day.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            onClick={() => setPickupDay(day.value)}
+                            className={`relative overflow-hidden rounded-2xl border-2 p-3 text-right transition-all duration-300 cursor-pointer active:scale-95 ${
+                              isSelected
+                                ? 'border-[#D78B78] bg-gradient-to-br from-[#FFF0EC] to-[#FBE0D8] shadow-lg shadow-[#E8B4A8]/30 -translate-y-0.5'
+                                : 'border-[#E8D4C8] bg-[#FFF8F3] hover:border-[#E8B4A8] hover:-translate-y-0.5 hover:shadow-md'
+                            }`}
+                          >
+                            <span className="absolute -left-3 -top-3 w-12 h-12 rounded-full bg-white/50" />
+                            <span className="relative flex items-center gap-2">
+                              <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-transform duration-300 ${
+                                isSelected ? 'bg-white scale-110 rotate-3' : 'bg-white/70'
+                              }`}>
+                                {day.emoji}
+                              </span>
+                              <span>
+                                <span className="block font-extrabold text-[#3D2817]">{day.label}</span>
+                                <span className="block text-[10px] text-[#8B7365] mt-0.5">{day.description}</span>
+                              </span>
+                            </span>
+                            {isSelected && (
+                              <span className="absolute left-2 bottom-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#D78B78] text-white animate-in zoom-in-75 duration-200">
+                                <Check size={13} strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Pick-up Time Window Selector */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#3D2817] mb-1">
-                      טווח שעות איסוף <span className="text-red-500 font-bold">*</span>
-                    </label>
-                    <select
-                      value={pickupTimeSlot}
-                      onChange={(e) => setPickupTimeSlot(e.target.value)}
-                      className="w-full rounded-2xl border border-[#E8D4C8] focus:border-[#E8B4A8] p-3 text-right text-base text-[#3D2817] transition-all bg-[#FFF8F3] cursor-pointer outline-none"
-                    >
-                      <option value="">בחר טווח שעות...</option>
-                      <option value="09:00 - 11:00">09:00 - 11:00</option>
-                      <option value="11:00 - 13:00">11:00 - 13:00</option>
-                      <option value="13:00 - 15:00">13:00 - 15:00</option>
-                      <option value="15:00 - 17:00">15:00 - 17:00</option>
-                      <option value="17:00 - 19:00">17:00 - 19:00</option>
-                      <option value="18:00 - 20:00">18:00 - 20:00</option>
-                    </select>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-[#3D2817]">
+                        טווח שעות איסוף <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <span className="text-[11px] font-bold text-[#C85A54] bg-[#FFF0EC] px-2 py-1 rounded-full">
+                        בוחרים שעה
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="בחירת טווח שעות איסוף">
+                      {PICKUP_TIME_SLOTS.map((slot) => {
+                        const isSelected = pickupTimeSlot === slot;
+                        return (
+                          <button
+                            key={slot}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            onClick={() => setPickupTimeSlot(slot)}
+                            className={`group relative rounded-xl border-2 px-3 py-3 text-center font-bold transition-all duration-300 cursor-pointer active:scale-95 ${
+                              isSelected
+                                ? 'border-[#D78B78] bg-[#D78B78] text-white shadow-md shadow-[#D78B78]/25 scale-[1.02]'
+                                : 'border-[#E8D4C8] bg-white text-[#6B4423] hover:border-[#E8B4A8] hover:bg-[#FFF0EC] hover:-translate-y-0.5'
+                            }`}
+                          >
+                            <span className="flex items-center justify-center gap-1.5">
+                              <Clock size={15} className={isSelected ? 'text-white' : 'text-[#D78B78]'} />
+                              {slot}
+                            </span>
+                            {isSelected && (
+                              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#3D2817] text-white animate-in zoom-in-75 duration-200">
+                                <Check size={12} strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -1206,7 +1268,7 @@ export default function Home() {
                             : 'bg-gray-300 text-gray-[#555] cursor-not-allowed border-none shadow-none'
                         }`}
                       >
-                        {isSubmittingOrder ? 'שולח את ההזמנה לבוט...' : 'המשך לתשלום ב-Bit 💳'}
+                        {isSubmittingOrder ? 'מכין את ההזמנה לתשלום...' : 'המשך לתשלום ב-Bit 💳'}
                       </Button>
                     </div>
                   );
