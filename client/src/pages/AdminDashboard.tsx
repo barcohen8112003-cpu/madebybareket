@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { 
   Cookie, Plus, Shield, TrendingUp, Users, ShoppingBag, 
-  Eye, EyeOff, Edit2, LogOut, Check, X, RefreshCw, Layers, Upload
+  Eye, EyeOff, Edit2, LogOut, Check, X, RefreshCw, Layers, Upload, RotateCw, ZoomIn
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,56 +77,36 @@ export default function AdminDashboard() {
     }
   };
 
-  const optimizeImage = (file: File): Promise<string> => new Promise((resolve, reject) => {
+  const openImageEditorFromFile = (file: File, target: 'new' | 'edit') => {
+    if (!file.type.startsWith('image/')) {
+      toast.error("נא לבחור קובץ תמונה בלבד");
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("לא ניתן לקרוא את התמונה"));
+    reader.onerror = () => toast.error("לא ניתן לקרוא את התמונה");
     reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error("לא ניתן לעבד את התמונה"));
-      image.onload = () => {
-        const maxSize = 1200;
-        const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const context = canvas.getContext('2d');
-        if (!context) {
-          reject(new Error("לא ניתן להכין את התמונה"));
-          return;
-        }
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      image.src = String(reader.result);
+      if (!reader.result) {
+        toast.error("לא ניתן לקרוא את התמונה");
+        return;
+      }
+      setImageEditorSource(String(reader.result));
+      setImageEditorTarget(target);
+      setImageEditorRotation(0);
+      setImageEditorZoom(1);
+      setImageEditorOffset({ x: 0, y: 0 });
     };
     reader.readAsDataURL(file);
-  });
-
-  const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error("נא לבחור קובץ תמונה בלבד");
-      return;
-    }
-    try {
-      setNewImage(await optimizeImage(file));
-    } catch (error: any) {
-      toast.error(error.message || "לא ניתן לעבד את התמונה");
-    }
   };
 
-  const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processFile = (file: File) => {
+    openImageEditorFromFile(file, 'new');
+  };
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error("נא לבחור קובץ תמונה בלבד");
-      return;
-    }
-
-    try {
-      setEditImage(await optimizeImage(file));
-    } catch (error: any) {
-      toast.error(error.message || "לא ניתן לעבד את התמונה");
-    }
+    openImageEditorFromFile(file, 'edit');
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -153,6 +133,11 @@ export default function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editName, setEditName] = useState('');
   const [editImage, setEditImage] = useState('');
+  const [imageEditorSource, setImageEditorSource] = useState('');
+  const [imageEditorTarget, setImageEditorTarget] = useState<'new' | 'edit' | null>(null);
+  const [imageEditorRotation, setImageEditorRotation] = useState(0);
+  const [imageEditorZoom, setImageEditorZoom] = useState(1);
+  const [imageEditorOffset, setImageEditorOffset] = useState({ x: 0, y: 0 });
   
   // Add product states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -163,6 +148,70 @@ export default function AdminDashboard() {
   const [newImage, setNewImage] = useState('cookies/cornflakes.jpg');
 
   const [, setLocation] = useLocation();
+
+  const closeImageEditor = () => {
+    setImageEditorSource('');
+    setImageEditorTarget(null);
+    setImageEditorRotation(0);
+    setImageEditorZoom(1);
+    setImageEditorOffset({ x: 0, y: 0 });
+  };
+
+  const openImageEditorFromSource = (source: string, target: 'new' | 'edit') => {
+    if (!source) return;
+    const normalizedSource = source.startsWith('data:') || source.startsWith('http')
+      ? source
+      : `/${source.replace(/^\/+/, '')}`;
+    setImageEditorSource(normalizedSource);
+    setImageEditorTarget(target);
+    setImageEditorRotation(0);
+    setImageEditorZoom(1);
+    setImageEditorOffset({ x: 0, y: 0 });
+  };
+
+  const applyImageEdit = () => {
+    if (!imageEditorSource || !imageEditorTarget) return;
+
+    const image = new Image();
+    image.onload = () => {
+      const outputSize = 900;
+      const canvas = document.createElement('canvas');
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        toast.error("לא ניתן לשמור את עריכת התמונה");
+        return;
+      }
+
+      const coverScale = Math.max(
+        outputSize / image.naturalWidth,
+        outputSize / image.naturalHeight,
+      ) * imageEditorZoom;
+
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, outputSize, outputSize);
+      context.translate(outputSize / 2 + imageEditorOffset.x, outputSize / 2 + imageEditorOffset.y);
+      context.rotate((imageEditorRotation * Math.PI) / 180);
+      context.drawImage(
+        image,
+        -(image.naturalWidth * coverScale) / 2,
+        -(image.naturalHeight * coverScale) / 2,
+        image.naturalWidth * coverScale,
+        image.naturalHeight * coverScale,
+      );
+
+      const editedImage = canvas.toDataURL('image/jpeg', 0.82);
+      if (imageEditorTarget === 'new') {
+        setNewImage(editedImage);
+      } else {
+        setEditImage(editedImage);
+      }
+      closeImageEditor();
+    };
+    image.onerror = () => toast.error("לא ניתן לטעון את התמונה לעריכה");
+    image.src = imageEditorSource;
+  };
 
   const getHeaders = () => {
     const token = localStorage.getItem('admin_token');
@@ -961,16 +1010,28 @@ export default function AdminDashboard() {
                         className="w-20 h-20 object-cover rounded-xl border border-[#E8D4C8] shadow-xs"
                       />
                       <span className="text-xs text-emerald-600 font-bold">✓ התמונה נטענה בהצלחה</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setNewImage('');
-                        }}
-                        className="text-xs text-rose-500 hover:underline font-semibold mt-1"
-                      >
-                        הסר תמונה
-                      </button>
+                       <div className="flex items-center gap-2 mt-1">
+                         <button
+                           type="button"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             openImageEditorFromSource(newImage, 'new');
+                           }}
+                           className="text-xs text-[#C85A54] bg-[#FFF0EC] hover:bg-[#FBE0D8] px-3 py-1.5 rounded-full font-bold transition-colors"
+                         >
+                           ערוך חיתוך וסיבוב
+                         </button>
+                         <button
+                           type="button"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setNewImage('');
+                           }}
+                           className="text-xs text-rose-500 hover:underline font-semibold"
+                         >
+                           הסר תמונה
+                         </button>
+                       </div>
                     </div>
                   ) : (
                     <>
@@ -1065,7 +1126,19 @@ export default function AdminDashboard() {
                         alt="תצוגה מקדימה"
                         className="w-24 h-24 object-cover rounded-xl border border-[#E8D4C8]"
                       />
-                      <span className="text-xs text-[#8B7365]">לחץ כדי לבחור תמונה אחרת</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openImageEditorFromSource(editImage, 'edit');
+                          }}
+                          className="text-xs text-[#C85A54] bg-[#FFF0EC] hover:bg-[#FBE0D8] px-3 py-1.5 rounded-full font-bold transition-colors"
+                        >
+                          ערוך חיתוך וסיבוב
+                        </button>
+                        <span className="text-xs text-[#8B7365]">או לחץ להחלפה</span>
+                      </div>
                     </div>
                   ) : (
                     <div className="py-4">
@@ -1093,6 +1166,125 @@ export default function AdminDashboard() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {imageEditorTarget && imageEditorSource && (
+        <div className="fixed inset-0 bg-[#2B211D]/75 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="bg-[#FFFDFB] rounded-[2rem] border border-[#E8D4C8] shadow-2xl p-5 sm:p-7 w-full max-w-md relative animate-in zoom-in-95 duration-200" dir="rtl">
+            <button
+              type="button"
+              onClick={closeImageEditor}
+              className="absolute top-4 left-4 p-2 text-[#8B7365] hover:text-[#5C4033] hover:bg-[#FAF5F0] rounded-full transition-colors cursor-pointer"
+              aria-label="סגירת עורך התמונות"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="text-center mb-5">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#FFF0EC] text-[#D78B78] mb-3">
+                <Upload size={22} />
+              </div>
+              <h2 className="text-xl font-extrabold text-[#5C4033]">עיצוב תמונת המוצר</h2>
+              <p className="text-xs text-[#8B7365] mt-1">חתוך, הגדל וסובב את התמונה לפני השמירה</p>
+            </div>
+
+            <div className="flex justify-center mb-5">
+              <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-[2rem] overflow-hidden bg-[#F3E5D8] border-4 border-white shadow-xl ring-1 ring-[#E8D4C8]">
+                <img
+                  src={imageEditorSource}
+                  alt="תצוגה מקדימה של חיתוך התמונה"
+                  className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+                  style={{
+                    transform: `translate(${imageEditorOffset.x}px, ${imageEditorOffset.y}px) rotate(${imageEditorRotation}deg) scale(${imageEditorZoom})`,
+                  }}
+                />
+                <div className="absolute inset-4 rounded-[1.5rem] border-2 border-white/80 pointer-events-none" />
+                <div className="absolute inset-0 pointer-events-none opacity-40">
+                  <div className="absolute left-1/3 top-0 bottom-0 border-l border-white" />
+                  <div className="absolute left-2/3 top-0 bottom-0 border-l border-white" />
+                  <div className="absolute top-1/3 left-0 right-0 border-t border-white" />
+                  <div className="absolute top-2/3 left-0 right-0 border-t border-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFF8F3] border border-[#E8D4C8] rounded-2xl p-4 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-[#5C4033]">
+                  <ZoomIn size={17} className="text-[#D78B78]" />
+                  זום וחיתוך
+                </label>
+                <span className="text-xs font-bold text-[#C85A54] bg-white rounded-full px-2.5 py-1">
+                  {Math.round(imageEditorZoom * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="2.5"
+                step="0.05"
+                value={imageEditorZoom}
+                onChange={(e) => setImageEditorZoom(Number(e.target.value))}
+                className="w-full accent-[#D78B78] cursor-pointer"
+                aria-label="זום וחיתוך תמונה"
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-bold text-[#8B7365]">
+                  הזזה לצדדים
+                  <input
+                    type="range"
+                    min="-120"
+                    max="120"
+                    value={imageEditorOffset.x}
+                    onChange={(e) => setImageEditorOffset(prev => ({ ...prev, x: Number(e.target.value) }))}
+                    className="w-full accent-[#D78B78] cursor-pointer mt-1"
+                    aria-label="הזזה אופקית"
+                  />
+                </label>
+                <label className="text-xs font-bold text-[#8B7365]">
+                  הזזה למעלה ולמטה
+                  <input
+                    type="range"
+                    min="-120"
+                    max="120"
+                    value={imageEditorOffset.y}
+                    onChange={(e) => setImageEditorOffset(prev => ({ ...prev, y: Number(e.target.value) }))}
+                    className="w-full accent-[#D78B78] cursor-pointer mt-1"
+                    aria-label="הזזה אנכית"
+                  />
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setImageEditorRotation(prev => (prev + 90) % 360)}
+                className="w-full flex items-center justify-center gap-2 bg-white border border-[#E8D4C8] hover:border-[#D78B78] hover:bg-[#FFF0EC] text-[#5C4033] font-bold rounded-xl py-2.5 transition-all cursor-pointer"
+              >
+                <RotateCw size={17} className="text-[#D78B78]" />
+                סובב תמונה 90°
+              </button>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <Button
+                type="button"
+                onClick={applyImageEdit}
+                className="flex-1 bg-[#D78B78] hover:bg-[#C27A68] text-white py-5 rounded-xl font-bold cursor-pointer"
+              >
+                אישור ושימוש בתמונה
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeImageEditor}
+                className="border-[#E8D4C8] text-[#8B7365] py-5 rounded-xl cursor-pointer"
+              >
+                ביטול
+              </Button>
+            </div>
           </div>
         </div>
       )}
